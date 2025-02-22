@@ -1,7 +1,0 @@
-// vercel.json（路由配置）
-{
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.js" }
-  ]
-}
