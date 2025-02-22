@@ -1,7 +1,12 @@
-// vercel.json（路由配置）
+// 正确配置示例（Express 项目）
 {
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.js" }
-  ]
+  "version": 2,
+  "builds": [{
+    "src": "index.js",
+    "use": "@vercel/node"
+  }],
+  "routes": [{
+    "src": "/(.*)",
+    "dest": "index.js"
+  }]
 }
