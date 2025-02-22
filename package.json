@@ -1,6 +1,6 @@
 // package.json
 {
-  "name": "vercel-demo",
+  "name": "verceltest",
   "version": "1.0.0",
   "scripts": {
     "start": "node index.js",
