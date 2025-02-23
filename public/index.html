@@ -1,11 +1,843 @@
-<!DOCTYPE html>
-<html>
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
-    <link rel="stylesheet" href="style.css">
-    <title>Vercel Demo 2025</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IUAI Voice Chatbot</title> <!-- 同步修改页面标题 -->
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            width: 50%;
+            max-width: 800px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin: 20px auto;
+        }
+
+        .chat-header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .chat-history {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+            max-height: 60vh;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+            position: relative;
+            padding: 5px 10px;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+            color: #333;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+            color: #4CAF50;
+        }
+
+        .message-tools {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            display: none;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 2px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .message:hover .message-tools {
+            display: flex !important;
+        }
+
+        .message-tools button {
+            margin: 0 2px;
+            padding: 4px;
+            border: none;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .message-tools button:hover {
+            background-color: #45a049;
+        }
+
+        .chat-input {
+            display: flex;
+            border-top: 1px solid #ddd;
+            padding: 10px;
+            background-color: #fff;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .chat-input input {
+            flex-grow: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 1rem;
+            outline: none;
+            min-width: 0;
+        }
+
+        .chat-input button {
+            margin-left: 10px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        #send-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #clear-button {
+            background-color: #f44336;
+            color: white;
+        }
+
+        #send-button:hover {
+            background-color: #45a049;
+        }
+
+        #clear-button:hover {
+            background-color: #e57373;
+        }
+
+        #mic-button {
+            margin-right: 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #4CAF50;
+        }
+
+        #mic-button.recording {
+            color: red;
+        }
+
+        .speak-icon {
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 1.2rem;
+            color: #4CAF50;
+        }
+
+        .speak-icon.playing::before {
+            content: '⏸️';
+        }
+
+        .speak-icon:not(.playing)::before {
+            content: '🔊';
+        }
+
+        .api-container {
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: none;
+            width: 50%;
+            max-width: 800px;
+            flex-direction: column;
+        }
+
+        .api-container.active {
+            display: flex;
+        }
+
+        .api-container input {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 1rem;
+            outline: none;
+            flex-grow: 1;
+        }
+
+        .api-container button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .api-container button:hover {
+            background-color: #45a049;
+        }
+
+        .api-row {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        #voice-select, #model-select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            max-width: 300px;
+            margin-right: 10px;
+        }
+
+        .label {
+            margin-right: 10px;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        .api-input-wrapper {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
+        .toggle-visibility {
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 5px;
+            color: #666;
+        }
+
+        .toggle-visibility.show::before {
+            content: '👁️';
+        }
+
+        .toggle-visibility::before {
+            content: '👁️‍🗨️';
+        }
+
+        #toggle-api-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        #toggle-api-button:hover {
+            background-color: #45a049;
+        }
+
+        @media (min-width: 901px) {
+            .chat-input input,
+            .chat-input button,
+            #mic-button {
+                height: 40px;
+                line-height: 1;
+            }
+
+            .chat-input input {
+                padding: 9px 10px;
+            }
+
+            .chat-input button {
+                padding: 0 15px;
+            }
+
+            #mic-button {
+                padding: 0 5px;
+                display: flex;
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 900px) {
+            body {
+                align-items: flex-start;
+                justify-content: center;
+            }
+
+            .chat-container, .api-container {
+                width: 95%;
+                max-width: 800px;
+                margin: 5px auto;
+            }
+
+            .chat-header {
+                font-size: 1rem;
+                padding: 6px;
+            }
+
+            .chat-history {
+                max-height: 40vh;
+            }
+
+            .message {
+                font-size: 0.8rem;
+            }
+
+            .chat-input {
+                padding: 6px;
+            }
+
+            .chat-input input {
+                padding: 5px;
+                font-size: 0.8rem;
+            }
+
+            .chat-input button {
+                padding: 5px 10px;
+                font-size: 0.8rem;
+                margin-left: 5px;
+            }
+
+            #mic-button {
+                font-size: 1rem;
+                margin-right: 5px;
+            }
+
+            .speak-icon {
+                font-size: 0.9rem;
+                margin-left: 5px;
+            }
+
+            .api-container input,
+            #voice-select,
+            #model-select {
+                padding: 5px;
+                font-size: 0.8rem;
+            }
+
+            .api-container button {
+                padding: 5px 10px;
+                font-size: 0.8rem;
+            }
+
+            .message-tools {
+                display: none;
+                bottom: 0;
+                right: 0;
+            }
+
+            .message:active .message-tools {
+                display: flex;
+            }
+
+            #voice-select, #model-select {
+                max-width: 200px;
+            }
+
+            .label {
+                font-size: 0.8rem;
+            }
+
+            .toggle-visibility {
+                font-size: 0.8rem;
+                padding: 3px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chat-container, .api-container {
+                width: 98%;
+                margin: 2px auto;
+            }
+
+            .chat-header {
+                font-size: 0.9rem;
+                padding: 5px;
+            }
+
+            .chat-history {
+                max-height: 35vh;
+            }
+
+            .message {
+                font-size: 0.7rem;
+            }
+
+            .chat-input input {
+                font-size: 0.7rem;
+            }
+
+            .chat-input button {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+
+            #voice-select, #model-select {
+                max-width: 150px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello Vercel!     OK 🚀</h1>
-    <p>Deployed from GitHub on 2025-02-23</p>
+    <div class="api-container" id="api-container">
+        <div class="api-row">
+            <span class="label">API Key:</span> <!-- 新增标题 -->
+            <div class="api-input-wrapper">
+                <input id="api-key-input" type="password" placeholder="请输入 SiliconFlow API Key">
+                <span class="toggle-visibility" id="toggle-visibility"></span>
+            </div>
+            <button id="save-api-button">保存</button>
+        </div>
+        <div class="api-row">
+            <span class="label">模型：</span>
+            <select id="model-select">
+                <option value="deepseek-ai/DeepSeek-R1-Distill-Llama-8B">DeepSeek-R1-Distill-Llama-8B</option>
+                <option value="Qwen/Qwen2.5-7B-Instruct">Qwen2.5-7B-Instruct</option>
+            </select>
+            <span class="label">音色：</span>
+            <select id="voice-select">
+                <option value="FunAudioLLM/CosyVoice2-0.5B:alex">沉稳男</option>
+                <option value="FunAudioLLM/CosyVoice2-0.5B:benjamin">低沉男</option>
+                <option value="FunAudioLLM/CosyVoice2-0.5B:charles">磁性男</option>
+                <option value="FunAudioLLM/CosyVoice2-0.5B:david">欢快男</option>
+                <option value="FunAudioLLM/CosyVoice2-0.5B:anna">沉稳女</option>
+                <option value="FunAudioLLM/CosyVoice2-0.5B:bella">激情女</option>
+                <option value="FunAudioLLM/CosyVoice2-0.5B:claire">温柔女</option>
+                <option value="FunAudioLLM/CosyVoice2-0.5B:diana">欢快女</option>
+            </select>
+        </div>
+    </div>
+    <button id="toggle-api-button">Set API</button>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>IUAI Voice Chatbot</h1> <!-- 修改标题 -->
+        </div>
+        <div id="chat-history" class="chat-history"></div>
+        <div class="chat-input">
+            <span id="mic-button" title="Click to record, auto-stop after 10s">🎙️</span>
+            <input id="user-input" type="text" placeholder="输入你的消息..." autocomplete="off">
+            <button id="send-button">发送</button>
+            <button id="clear-button" class="clear-btn">清空</button>
+        </div>
+    </div>
+    <script>
+        const chatHistory = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const clearButton = document.getElementById('clear-button');
+        const micButton = document.getElementById('mic-button');
+        const voiceSelect = document.getElementById('voice-select');
+        const modelSelect = document.getElementById('model-select');
+        const apiContainer = document.getElementById('api-container');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const saveApiButton = document.getElementById('save-api-button');
+        const toggleApiButton = document.getElementById('toggle-api-button');
+        const toggleVisibility = document.getElementById('toggle-visibility');
+
+        const conversationHistory = [];
+        let apiKey = localStorage.getItem('apiKey') || 'sk-ijawlvqnfsfgxtiwrkuollbrxosdkemwrqoymwplwqtrztw';
+        let selectedModel = localStorage.getItem('selectedModel') || 'Qwen/Qwen2.5-7B-Instruct';
+        const maxRecordingTime = 10000;
+        const audioStates = new Map();
+
+        if (!localStorage.getItem('apiKey') || !localStorage.getItem('selectedModel')) {
+            apiContainer.classList.add('active');
+        } else {
+            apiContainer.classList.remove('active');
+        }
+        apiKeyInput.value = apiKey;
+        modelSelect.value = selectedModel;
+        voiceSelect.value = localStorage.getItem('selectedVoice') || 'FunAudioLLM/CosyVoice2-0.5B:alex';
+
+        toggleVisibility.addEventListener('click', () => {
+            if (apiKeyInput.type === 'password') {
+                apiKeyInput.type = 'text';
+                toggleVisibility.classList.add('show');
+            } else {
+                apiKeyInput.type = 'password';
+                toggleVisibility.classList.remove('show');
+            }
+        });
+
+        toggleApiButton.addEventListener('click', () => {
+            apiContainer.classList.toggle('active');
+        });
+
+        saveApiButton.addEventListener('click', () => {
+            const newApiKey = apiKeyInput.value.trim();
+            const newModel = modelSelect.value;
+            const newVoice = voiceSelect.value;
+            if (newApiKey && newModel && newVoice) {
+                apiKey = newApiKey;
+                selectedModel = newModel;
+                localStorage.setItem('apiKey', newApiKey);
+                localStorage.setItem('selectedModel', newModel);
+                localStorage.setItem('selectedVoice', newVoice);
+                apiContainer.classList.remove('active');
+                appendMessage('assistant', 'API Key、模型和语音已更新');
+            } else {
+                appendMessage('assistant', '请输入有效的 API Key 并选择模型和语音');
+            }
+        });
+
+        function appendMessage(role, content, audioUrl = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+
+            const toolsDiv = document.createElement('div');
+            toolsDiv.className = 'message-tools';
+            const readButton = document.createElement('button');
+            readButton.textContent = '🔊';
+            readButton.title = '朗读';
+            readButton.onclick = () => toggleAudio({ target: messageDiv.querySelector('.speak-icon') });
+            const copyButton = document.createElement('button');
+            copyButton.textContent = '📋';
+            copyButton.title = '复制';
+            copyButton.onclick = () => {
+                navigator.clipboard.writeText(content).then(() => {
+                    alert('已复制到剪贴板');
+                }).catch(err => {
+                    alert('复制失败: ' + err);
+                });
+            };
+            toolsDiv.appendChild(readButton);
+            toolsDiv.appendChild(copyButton);
+            messageDiv.appendChild(toolsDiv);
+
+            const contentSpan = document.createElement('span');
+            contentSpan.textContent = `${role === 'user' ? '你' : 'AI'}: ${content} `;
+            messageDiv.appendChild(contentSpan);
+
+            const speakIcon = document.createElement('span');
+            speakIcon.className = 'speak-icon';
+            speakIcon.dataset.audioUrl = audioUrl || '';
+            speakIcon.dataset.text = content;
+            speakIcon.onclick = toggleAudio;
+            messageDiv.appendChild(speakIcon);
+
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            conversationHistory.push({ role, content });
+
+            if (audioUrl) {
+                const audio = new Audio(audioUrl);
+                audioStates.set(speakIcon, { audio, isPlaying: false });
+            }
+            return messageDiv;
+        }
+
+        function toggleAudio(event) {
+            const speakIcon = event.target;
+            const audioUrl = speakIcon.dataset.audioUrl;
+            const text = speakIcon.dataset.text;
+            const state = audioStates.get(speakIcon);
+
+            if (state && audioUrl) {
+                const audio = state.audio;
+                if (state.isPlaying) {
+                    audio.pause();
+                    state.isPlaying = false;
+                    speakIcon.classList.remove('playing');
+                } else {
+                    audioStates.forEach((otherState, otherIcon) => {
+                        if (otherState.isPlaying) {
+                            otherState.audio.pause();
+                            otherState.isPlaying = false;
+                            otherIcon.classList.remove('playing');
+                        }
+                    });
+                    audio.play();
+                    state.isPlaying = true;
+                    speakIcon.classList.add('playing');
+                    audio.onended = () => {
+                        state.isPlaying = false;
+                        speakIcon.classList.remove('playing');
+                    };
+                }
+            } else if (text) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        async function convertWebmToWav(blob) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+            const arrayBuffer = await blob.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            const wavBuffer = audioBufferToWav(audioBuffer);
+            return new Blob([wavBuffer], { type: 'audio/wav' });
+        }
+
+        function audioBufferToWav(audioBuffer) {
+            const numOfChan = 1;
+            const length = audioBuffer.length * numOfChan * 2 + 44;
+            const buffer = new ArrayBuffer(length);
+            const view = new DataView(buffer);
+            const sampleRate = 16000;
+
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + audioBuffer.length * numOfChan * 2, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, numOfChan, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * numOfChan * 2, true);
+            view.setUint16(32, numOfChan * 2, true);
+            view.setUint16(34, 16, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, audioBuffer.length * numOfChan * 2, true);
+
+            const channelData = audioBuffer.getChannelData(0);
+            let offset = 44;
+            for (let i = 0; i < audioBuffer.length; i++, offset += 2) {
+                const s = Math.max(-1, Math.min(1, channelData[i]));
+                view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+            }
+            return buffer;
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        async function sendMessage(audioBlob = null) {
+            let message = audioBlob ? null : userInput.value.trim();
+            if (!audioBlob && message === '') return;
+
+            if (!apiKey) {
+                appendMessage('assistant', '请先设置有效的 API Key');
+                apiContainer.classList.add('active');
+                return;
+            }
+
+            if (audioBlob) {
+                const wavBlob = await convertWebmToWav(audioBlob);
+                const formData = new FormData();
+                formData.append('model', 'FunAudioLLM/SenseVoiceSmall');
+                formData.append('file', wavBlob, 'audio.wav');
+                formData.append('language', 'zh');
+
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000);
+                    const asrResponse = await fetch('https://api.siliconflow.cn/v1/audio/transcriptions', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: formData,
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+
+                    if (!asrResponse.ok) {
+                        const errorText = await asrResponse.text();
+                        throw new Error(`ASR 请求失败，状态码: ${asrResponse.status}, 响应: ${errorText}`);
+                    }
+
+                    const asrData = await asrResponse.json();
+                    message = asrData.text || '错误：无法转录语音';
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        message = '错误：语音识别请求超时，请检查网络';
+                    } else {
+                        message = `错误：语音识别失败 - ${error.message}`;
+                    }
+                }
+            }
+
+            appendMessage('user', message);
+            userInput.value = '';
+
+            try {
+                const chatController = new AbortController();
+                const chatTimeoutId = setTimeout(() => chatController.abort(), 30000);
+                const chatResponse = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: selectedModel,
+                        messages: conversationHistory.map(msg => ({
+                            role: msg.role === 'user' ? 'user' : 'assistant',
+                            content: msg.content
+                        }))
+                    }),
+                    signal: chatController.signal
+                });
+                clearTimeout(chatTimeoutId);
+
+                if (!chatResponse.ok) {
+                    throw new Error(`Chat 请求失败，状态码: ${chatResponse.status}`);
+                }
+
+                const chatData = await chatResponse.json();
+                const assistantMessage = chatData.choices[0].message.content;
+
+                const selectedVoice = voiceSelect.value;
+                const ttsController = new AbortController();
+                const ttsTimeoutId = setTimeout(() => ttsController.abort(), 30000);
+                const ttsResponse = await fetch('https://api.siliconflow.cn/v1/audio/speech', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'FunAudioLLM/CosyVoice2-0.5B',
+                        voice: selectedVoice,
+                        input: assistantMessage,
+                        response_format: 'mp3'
+                    }),
+                    signal: ttsController.signal
+                });
+                clearTimeout(ttsTimeoutId);
+
+                if (!ttsResponse.ok) {
+                    const errorText = await ttsResponse.text();
+                    throw new Error(`TTS 请求失败，状态码: ${ttsResponse.status}, 响应: ${errorText}`);
+                }
+
+                const audioBlob = await ttsResponse.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const messageDiv = appendMessage('assistant', assistantMessage, audioUrl);
+
+                const speakIcon = messageDiv.querySelector('.speak-icon');
+                const audio = audioStates.get(speakIcon).audio;
+
+                audioStates.forEach((state, icon) => {
+                    if (state.isPlaying) {
+                        state.audio.pause();
+                        state.isPlaying = false;
+                        icon.classList.remove('playing');
+                    }
+                });
+
+                audio.play();
+                audioStates.get(speakIcon).isPlaying = true;
+                speakIcon.classList.add('playing');
+                audio.onended = () => {
+                    audioStates.get(speakIcon).isPlaying = false;
+                    speakIcon.classList.remove('playing');
+                };
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    appendMessage('assistant', '错误：请求超时，请检查网络');
+                } else {
+                    appendMessage('assistant', `错误：无法获取响应 - ${error.message}`);
+                }
+            }
+        }
+
+        function clearChat() {
+            chatHistory.innerHTML = '';
+            audioStates.forEach(state => {
+                if (state.audio.src) {
+                    URL.revokeObjectURL(state.audio.src);
+                }
+            });
+            audioStates.clear();
+            conversationHistory.length = 0;
+        }
+
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            let mediaRecorder;
+            let audioChunks = [];
+            let isRecording = false;
+            let recordingTimeout;
+
+            micButton.addEventListener('click', async () => {
+                if (!isRecording) {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+                    micButton.classList.add('recording');
+                    isRecording = true;
+
+                    recordingTimeout = setTimeout(() => {
+                        if (isRecording) {
+                            mediaRecorder.stop();
+                            micButton.classList.remove('recording');
+                            isRecording = false;
+                        }
+                    }, maxRecordingTime);
+
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        sendMessage(audioBlob);
+                        audioChunks = [];
+                        stream.getTracks().forEach(track => track.stop());
+                        clearTimeout(recordingTimeout);
+                        micButton.classList.remove('recording');
+                        isRecording = false;
+                    };
+                } else {
+                    mediaRecorder.stop();
+                    clearTimeout(recordingTimeout);
+                }
+            });
+        } else {
+            micButton.style.display = 'none';
+        }
+
+        sendButton.addEventListener('click', () => sendMessage());
+        clearButton.addEventListener('click', clearChat);
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
 </body>
 </html>
