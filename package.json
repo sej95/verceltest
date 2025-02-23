@@ -1,5 +1,5 @@
 {
-  "name": "nextjs-vercel-demo",
+  "name": "verceltest",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
