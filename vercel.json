@@ -1,12 +1,5 @@
-// 正确配置示例（Express 项目）
 {
   "version": 2,
-  "builds": [{
-    "src": "index.js",
-    "use": "@vercel/node"
-  }],
-  "routes": [{
-    "src": "/(.*)",
-    "dest": "index.js"
-  }]
+  "builds": [{ "src": "public/**", "use": "@vercel/static" }],
+  "routes": [{ "handle": "filesystem" }]
 }
