@@ -972,7 +972,7 @@ video {
   opacity: 0.5;
 }
 
-@media (max-width: 768px) {
+@media (min-width: 768px) {
   .md\:mb-0 {
     margin-bottom: 0px;
   }
@@ -1004,7 +1004,7 @@ video {
   }
 }
 
-@media (min-width: 768px) {
+@media (max-width: 768px) {
   table.min-w-full {
     table-layout: fixed !important;
     width: 100vw !important;
