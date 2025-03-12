@@ -1003,3 +1003,17 @@ video {
     padding: 2rem;
   }
 }
+
+/* 移动端表格优化 */
+@media (max-width: 768px) {
+  table.min-w-full td { 
+    white-space: normal;
+    padding: 0.5rem 0.75rem;
+  }
+  td:nth-child(1) { width: 40% }
+  td:nth-child(2) { 
+    width: 60%;
+    font-size: 3.5vw;
+    line-height: 1.2;
+  }
+}
