@@ -60,6 +60,8 @@
         </div>
 
         <div class="mb-4">
+
+        <div class="mb-4">
           <label for="fileInput" class="block text-gray-700 font-medium mb-2">选择想合成语音的文件 (srt/txt):</label>
           <input type="file" id="fileInput" @change="handleFileSelect" accept=".srt,.txt" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
@@ -80,7 +82,7 @@
             <option v-for="voice in voices" :value="voice" :key="voice">{{ voice.split('-').slice(-1)[0] }}</option>
           </select>
         </div>  
-        
+        </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
