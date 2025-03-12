@@ -806,7 +806,7 @@
  async generateSpeech(listener_text) {
  console.log(listener_text)
 //        const workerUrl = 'https://ttsapi.pyvideotrans.com/v1/audio/speech';
-        const workerUrl = 'https://ettsapi.jn9502.workers.dev/';
+        const workerUrl = 'https://ettsapi.jn9502.workers.dev/v1/audio/speech';
         const parsedText = typeof listener_text==='string'?listener_text:this.parseText();
 		if(!this.selectedVoice || this.selectedVoice=='No'){
 			
