@@ -63,6 +63,27 @@
     </div>
   </div>
 
+	
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <label for="language" class="block text-gray-700 font-medium mb-2">文本语言:</label>
+      <select id="language" v-model="selectedLanguage" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option v-for="(roles, language) in language_role" :value="language" :key="language">{{ names[language] }}</option>
+      </select>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6" v-if="selectedLanguage">
+		<div class="flex">
+      <label for="voice" class="block text-gray-700 font-medium mb-2">配音角色</label>
+	  (<span id="shiting" class="cursor-pointer" @click="shiting">试听</span>)
+		
+		</div>
+      <select id="voice" v-model="selectedVoice" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option v-for="voice in voices" :value="voice" :key="voice">{{ voice.split('-').slice(-1)[0] }}</option>
+        </select>
+    </div>  
+ </div>
+
 
   <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mt-4">
 
@@ -93,27 +114,6 @@
         <option v-for="st in styles" :value="st" :key="st">{{ st }}</option>
         </select>
 	</div>
-
-	  
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <label for="language" class="block text-gray-700 font-medium mb-2">文本语言:</label>
-      <select id="language" v-model="selectedLanguage" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <option v-for="(roles, language) in language_role" :value="language" :key="language">{{ names[language] }}</option>
-      </select>
-    </div>
-
-    <div class="bg-white rounded-lg shadow-md p-6" v-if="selectedLanguage">
-		<div class="flex">
-      <label for="voice" class="block text-gray-700 font-medium mb-2">配音角色</label>
-	  (<span id="shiting" class="cursor-pointer" @click="shiting">试听</span>)
-		
-		</div>
-      <select id="voice" v-model="selectedVoice" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <option v-for="voice in voices" :value="voice" :key="voice">{{ voice.split('-').slice(-1)[0] }}</option>
-        </select>
-    </div>  
- </div>
 
 
 </div>
