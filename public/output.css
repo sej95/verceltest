@@ -1004,16 +1004,25 @@ video {
   }
 }
 
-/* 移动端表格优化 */
 @media (max-width: 768px) {
+  table.min-w-full {
+    table-layout: fixed !important;
+    width: 100vw !important;
+    margin-left: -1rem;
+    margin-right: -1rem;
+  }
   table.min-w-full td { 
     white-space: normal;
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 0.75rem !important;
+    word-break: break-word; /* 强制换行 */
   }
-  td:nth-child(1) { width: 40% }
+  td:nth-child(1) { 
+    width: 40% !important;
+    padding-right: 1rem !important;
+  }
   td:nth-child(2) { 
-    width: 60%;
-    font-size: 3.5vw;
-    line-height: 1.2;
+    width: 60% !important;
+    font-size: calc(0.875rem + 0.5vw);
+    line-height: 1.4;
   }
 }
