@@ -1,843 +1,927 @@
-﻿<!DOCTYPE html>
-<html lang="zh-CN">
+<!DOCTYPE html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IUAI Voice Chatbot</title> <!-- 同步修改页面标题 -->
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            flex-direction: column;
-        }
-
-        .chat-container {
-            width: 50%;
-            max-width: 800px;
-            background-color: #ffffff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            margin: 20px auto;
-        }
-
-        .chat-header {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            font-size: 1.5rem;
-        }
-
-        .chat-history {
-            flex-grow: 1;
-            padding: 15px;
-            overflow-y: auto;
-            background-color: #f9f9f9;
-            max-height: 60vh;
-        }
-
-        .message {
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            font-size: 1rem;
-            position: relative;
-            padding: 5px 10px;
-        }
-
-        .message.user {
-            justify-content: flex-end;
-            color: #333;
-        }
-
-        .message.assistant {
-            justify-content: flex-start;
-            color: #4CAF50;
-        }
-
-        .message-tools {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            display: none;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 2px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-        }
-
-        .message:hover .message-tools {
-            display: flex !important;
-        }
-
-        .message-tools button {
-            margin: 0 2px;
-            padding: 4px;
-            border: none;
-            border-radius: 4px;
-            background-color: #4CAF50;
-            color: white;
-            cursor: pointer;
-            font-size: 1rem;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .message-tools button:hover {
-            background-color: #45a049;
-        }
-
-        .chat-input {
-            display: flex;
-            border-top: 1px solid #ddd;
-            padding: 10px;
-            background-color: #fff;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .chat-input input {
-            flex-grow: 1;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 10px;
-            font-size: 1rem;
-            outline: none;
-            min-width: 0;
-        }
-
-        .chat-input button {
-            margin-left: 10px;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-
-        #send-button {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        #clear-button {
-            background-color: #f44336;
-            color: white;
-        }
-
-        #send-button:hover {
-            background-color: #45a049;
-        }
-
-        #clear-button:hover {
-            background-color: #e57373;
-        }
-
-        #mic-button {
-            margin-right: 10px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            color: #4CAF50;
-        }
-
-        #mic-button.recording {
-            color: red;
-        }
-
-        .speak-icon {
-            cursor: pointer;
-            margin-left: 10px;
-            font-size: 1.2rem;
-            color: #4CAF50;
-        }
-
-        .speak-icon.playing::before {
-            content: '⏸️';
-        }
-
-        .speak-icon:not(.playing)::before {
-            content: '🔊';
-        }
-
-        .api-container {
-            margin: 20px auto;
-            background-color: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            display: none;
-            width: 50%;
-            max-width: 800px;
-            flex-direction: column;
-        }
-
-        .api-container.active {
-            display: flex;
-        }
-
-        .api-container input {
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 8px;
-            font-size: 1rem;
-            outline: none;
-            flex-grow: 1;
-        }
-
-        .api-container button {
-            padding: 8px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        .api-container button:hover {
-            background-color: #45a049;
-        }
-
-        .api-row {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-
-        #voice-select, #model-select {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            max-width: 300px;
-            margin-right: 10px;
-        }
-
-        .label {
-            margin-right: 10px;
-            font-size: 1rem;
-            color: #333;
-        }
-
-        .api-input-wrapper {
-            display: flex;
-            align-items: center;
-            flex-grow: 1;
-            margin-right: 10px;
-        }
-
-        .toggle-visibility {
-            cursor: pointer;
-            font-size: 1rem;
-            padding: 5px;
-            color: #666;
-        }
-
-        .toggle-visibility.show::before {
-            content: '👁️';
-        }
-
-        .toggle-visibility::before {
-            content: '👁️‍🗨️';
-        }
-
-        #toggle-api-button {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 5px 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            z-index: 10;
-        }
-
-        #toggle-api-button:hover {
-            background-color: #45a049;
-        }
-
-        @media (min-width: 901px) {
-            .chat-input input,
-            .chat-input button,
-            #mic-button {
-                height: 40px;
-                line-height: 1;
-            }
-
-            .chat-input input {
-                padding: 9px 10px;
-            }
-
-            .chat-input button {
-                padding: 0 15px;
-            }
-
-            #mic-button {
-                padding: 0 5px;
-                display: flex;
-                align-items: center;
-            }
-        }
-
-        @media (max-width: 900px) {
-            body {
-                align-items: flex-start;
-                justify-content: center;
-            }
-
-            .chat-container, .api-container {
-                width: 95%;
-                max-width: 800px;
-                margin: 5px auto;
-            }
-
-            .chat-header {
-                font-size: 1rem;
-                padding: 6px;
-            }
-
-            .chat-history {
-                max-height: 40vh;
-            }
-
-            .message {
-                font-size: 0.8rem;
-            }
-
-            .chat-input {
-                padding: 6px;
-            }
-
-            .chat-input input {
-                padding: 5px;
-                font-size: 0.8rem;
-            }
-
-            .chat-input button {
-                padding: 5px 10px;
-                font-size: 0.8rem;
-                margin-left: 5px;
-            }
-
-            #mic-button {
-                font-size: 1rem;
-                margin-right: 5px;
-            }
-
-            .speak-icon {
-                font-size: 0.9rem;
-                margin-left: 5px;
-            }
-
-            .api-container input,
-            #voice-select,
-            #model-select {
-                padding: 5px;
-                font-size: 0.8rem;
-            }
-
-            .api-container button {
-                padding: 5px 10px;
-                font-size: 0.8rem;
-            }
-
-            .message-tools {
-                display: none;
-                bottom: 0;
-                right: 0;
-            }
-
-            .message:active .message-tools {
-                display: flex;
-            }
-
-            #voice-select, #model-select {
-                max-width: 200px;
-            }
-
-            .label {
-                font-size: 0.8rem;
-            }
-
-            .toggle-visibility {
-                font-size: 0.8rem;
-                padding: 3px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .chat-container, .api-container {
-                width: 98%;
-                margin: 2px auto;
-            }
-
-            .chat-header {
-                font-size: 0.9rem;
-                padding: 5px;
-            }
-
-            .chat-history {
-                max-height: 35vh;
-            }
-
-            .message {
-                font-size: 0.7rem;
-            }
-
-            .chat-input input {
-                font-size: 0.7rem;
-            }
-
-            .chat-input button {
-                padding: 4px 8px;
-                font-size: 0.7rem;
-            }
-
-            #voice-select, #model-select {
-                max-width: 150px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="在线免费的语音合成、文字转语音、文字合成配音服务，基于edge-tts语音合成服务提供，无需登录无需注册，在线免费合成语音"/>
+	<meta name="keyword" content="语音合成,文字合成,文字配音,合成语音,edge-tts,pyvideotrans"/>
+  <title>语音合成-文字转语音-srt字幕转语音-tts.pyvideotrans.com</title>
+  <link href="/output.css" rel="stylesheet">
+  <script src="/vue.js"></script>
+
+	
+	
+	<style>
+	#layui-nav {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 99;
+    overflow: auto;
+    white-space: nowrap;
+    background: #eee;
+}
+.layui-nav .layui-nav-item {
+    position: relative;
+    display: inline-block;
+    margin-top: 0;
+    list-style: none;
+    vertical-align: middle;
+    line-height: 60px;
+}
+.layui-nav .layui-nav-item a {
+    color: #333;
+}
+.layui-nav .layui-nav-item a {
+    display: block;
+    padding: 0 20px;
+    color: #333;
+    transition: all .3s;
+    -webkit-transition: all .3s;
+}
+.layui-nav .layui-nav-item a:hover, .layui-nav .layui-this a {
+    color: #009688;
+    text-decoration: none;
+}
+		#app{margin-top:50px}
+	</style>
 </head>
-<body>
-    <div class="api-container" id="api-container">
-        <div class="api-row">
-            <span class="label">API Key:</span> <!-- 新增标题 -->
-            <div class="api-input-wrapper">
-                <input id="api-key-input" type="password" placeholder="请输入 SiliconFlow API Key">
-                <span class="toggle-visibility" id="toggle-visibility"></span>
-            </div>
-            <button id="save-api-button">保存</button>
-        </div>
-        <div class="api-row">
-            <span class="label">模型：</span>
-            <select id="model-select">
-                <option value="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B">DeepSeek-R1-Distill-Qwen-7B</option>
-                <option value="Qwen/Qwen2.5-7B-Instruct">Qwen2.5-7B-Instruct</option>
-            </select>
-            <span class="label">音色：</span>
-            <select id="voice-select">
-                <option value="FunAudioLLM/CosyVoice2-0.5B:alex">沉稳男</option>
-                <option value="FunAudioLLM/CosyVoice2-0.5B:benjamin">低沉男</option>
-                <option value="FunAudioLLM/CosyVoice2-0.5B:charles">磁性男</option>
-                <option value="FunAudioLLM/CosyVoice2-0.5B:david">欢快男</option>
-                <option value="FunAudioLLM/CosyVoice2-0.5B:anna">沉稳女</option>
-                <option value="FunAudioLLM/CosyVoice2-0.5B:bella">激情女</option>
-                <option value="FunAudioLLM/CosyVoice2-0.5B:claire">温柔女</option>
-                <option value="FunAudioLLM/CosyVoice2-0.5B:diana">欢快女</option>
-            </select>
+<body class="bg-gray-100 font-sans">
+	<ul id="layui-nav" class="layui-nav">
+        <li class="layui-nav-item"><a href="https://pyvideotrans.com">pyVideoTrans</a></li>
+        <li class="layui-nav-item"><a href="https://tool.pyvideotrans.com" >视频工具箱</a></li>
+	<li class="layui-nav-item"><a href="https://stt.pyvideotrans.com">语音识别</a></li>
+        <li class="layui-nav-item "><a href="https://srt.pyvideotrans.com" >字幕翻译</a></li>
+	<li class="layui-nav-item layui-this"><a href="https://tts.pyvideotrans.com">语音合成</a></li>
+		</ul>
+<div class="container mx-auto p-4 md:p-8" id="app">
+  <h1 class="text-3xl font-bold mb-2 text-center text-gray-800">文字合成语音/SRT字幕转语音</h1>
+
+  <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="mb-4">
+        <label for="fileInput" class="block text-gray-700 font-medium mb-2">选择想合成语音的文件 (srt/txt):</label>
+        <input type="file" id="fileInput" @change="handleFileSelect" accept=".srt,.txt" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+    <div class="mb-4">
+      <label for="textInput" class="block  font-medium mb-2 ">输入文本<span class="ms-2 text-xs text-gray-700">行尾加<code>[50]</code>代表添加50毫秒静音，<code>[500]</code>代表加500毫秒静音，中括号内数字代表静音毫秒数</span></label>
+      <textarea placeholder="选择txt文本或srt字幕上传，或直接在此输入要配音的文字" id="textInput" v-model="text" rows="5" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+    </div>
+  </div>
+
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <label for="language" class="block text-gray-700 font-medium mb-2">文本语言:</label>
+      <select id="language" v-model="selectedLanguage" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option v-for="(roles, language) in language_role" :value="language" :key="language">{{ names[language] }}</option>
+      </select>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6" v-if="selectedLanguage">
+		<div class="flex">
+      <label for="voice" class="block text-gray-700 font-medium mb-2">配音角色</label>
+	  (<span id="shiting" class="cursor-pointer" @click="shiting">试听</span>)
+		
+		</div>
+      <select id="voice" v-model="selectedVoice" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option v-for="voice in voices" :value="voice" :key="voice">{{ voice.split('-').slice(-1)[0] }}</option>
+        </select>
+    </div>  
+ </div>
+
+
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mt-4">
+
+	<div class="bg-white rounded-lg shadow-md p-6">
+        <label for="speed" class="block text-gray-700 font-medium mb-2">语速 (0.1 -&gt; 5.0):</label>
+        <div class="flex items-center">    
+		 <input type="range" id="speed" v-model.number="speed" min="0.1" max="5.0" step="0.1" class="w-full mr-2">
+					<span class="text-gray-600">{{ speed }}</span>
+		</div>
+    </div>    
+	<div class="bg-white rounded-lg shadow-md p-6">
+        <label for="pitch" class="block text-gray-700 font-medium mb-2">音调 (-100 -&gt; +100):</label>
+        <div class="flex items-center">
+          <input type="range" id="pitch" v-model.number="pitch" min="-100" max="100" class="w-full mr-2">
+          <span class="text-gray-600">{{ pitch }}</span>
         </div>
     </div>
-    <button id="toggle-api-button">Set API</button>
-    <div class="chat-container">
-        <div class="chat-header">
-            <h1>IUAI Voice Chatbot</h1> <!-- 修改标题 -->
-        </div>
-        <div id="chat-history" class="chat-history"></div>
-        <div class="chat-input">
-            <span id="mic-button" title="Click to record, auto-stop after 10s">🎙️</span>
-            <input id="user-input" type="text" placeholder="输入你的消息..." autocomplete="off">
-            <button id="send-button">发送</button>
-            <button id="clear-button" class="clear-btn">清空</button>
+	<div class="bg-white rounded-lg shadow-md p-6">
+        <label for="volume" class="block text-gray-700 font-medium mb-2">音量 (0.1 -&gt; 5):</label>
+        <div class="flex items-center">
+          <input type="range" id="volume" v-model.volume="volume" min="0.1" step="0.1" max="5" class="w-full mr-2">
+          <span class="text-gray-600">{{ volume }}</span>
         </div>
     </div>
-    <script>
-        const chatHistory = document.getElementById('chat-history');
-        const userInput = document.getElementById('user-input');
-        const sendButton = document.getElementById('send-button');
-        const clearButton = document.getElementById('clear-button');
-        const micButton = document.getElementById('mic-button');
-        const voiceSelect = document.getElementById('voice-select');
-        const modelSelect = document.getElementById('model-select');
-        const apiContainer = document.getElementById('api-container');
-        const apiKeyInput = document.getElementById('api-key-input');
-        const saveApiButton = document.getElementById('save-api-button');
-        const toggleApiButton = document.getElementById('toggle-api-button');
-        const toggleVisibility = document.getElementById('toggle-visibility');
+	<div class="bg-white rounded-lg shadow-md p-6">
+        <label for="style" class="block text-gray-700 font-medium mb-2">语气(部分不起作用):</label>
+	<select id="style" v-model="selectedStyle" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option v-for="st in styles" :value="st" :key="st">{{ st }}</option>
+        </select>
+	</div>
+</div>
+	<div id="audioContainer" class="my-3 text-center bg-white flex justify-center py-3 "></div>
+	
+  <div class="mt-8 text-center">
+    <button @click="generateSpeech" :disabled="isGenerating" class="bg-red-500 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+      {{ isGenerating ? '语音合成中...' : '执行合成语音' }}
+    </button>
+  </div>
 
-        const conversationHistory = [];
-        let apiKey = localStorage.getItem('apiKey') || 'sk-ijawlvqnfsfgxtiwrkuollbrxosdkemwrqoymwplwqtrztw';
-        let selectedModel = localStorage.getItem('selectedModel') || 'Qwen/Qwen2.5-7B-Instruct';
-        const maxRecordingTime = 10000;
-        const audioStates = new Map();
+  
+    <table class="min-w-full divide-y divide-gray-200 my-4">
+    <thead class="bg-gray-50">
+      <tr>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">语气风格</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">风格说明</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>friendly</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达一种愉快、怡人且温暖的语气。 听起来很真诚且满怀关切。
+</td>
+      </tr>
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>advertisement_upbeat</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">用兴奋和精力充沛的语气推广产品或服务。</td>
+      </tr>
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>affectionate</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">以较高的音调和音量表达温暖而亲切的语气。 说话者处于吸引听众注意力的状态。 说话者的个性往往是讨喜的。</td>
+      </tr>
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>angry</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达生气和厌恶的语气。</td>
+      </tr>
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>assistant</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">数字助理用的是热情而轻松的语气。</td>
+      </tr>
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>calm</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">以沉着冷静的态度说话。 语气、音调和韵律与其他语音类型相比要统一得多。</td>
+      </tr>
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>chat</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达轻松随意的语气。</td>
+      </tr>
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>cheerful</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达积极愉快的语气。</td>
+      </tr>
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>customerservice</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">以友好热情的语气为客户提供支持。</td>
+      </tr>
+	  
+	  
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>depressed</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">调低音调和音量来表达忧郁、沮丧的语气。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>disgruntled</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达轻蔑和抱怨的语气。 这种情绪的语音表现出不悦和蔑视。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>documentary-narration</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">用一种轻松、感兴趣和信息丰富的风格讲述纪录片，适合纪录片、专家评论和类似内容。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>embarrassed</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">在说话者感到不舒适时表达不确定、犹豫的语气。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>empathetic</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达关心和理解。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>envious</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">当你渴望别人拥有的东西时，表达一种钦佩的语气。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>excited</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达乐观和充满希望的语气。 似乎发生了一些美好的事情，说话人对此满意。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>fearful</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">以较高的音调、较高的音量和较快的语速来表达恐惧、紧张的语气。 说话人处于紧张和不安的状态。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>gentle</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">以较低的音调和音量表达温和、礼貌和愉快的语气。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>hopeful</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达一种温暖且渴望的语气。 听起来像是会有好事发生在说话人身上。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>lyrical</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">以优美又带感伤的方式表达情感。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>narration-professional</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">以专业、客观的语气朗读内容。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>narration-relaxed</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">为内容阅读表达一种舒缓而悦耳的语气。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>newscast</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">以正式专业的语气叙述新闻。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>newscast-casual</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">以通用、随意的语气发布一般新闻。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>newscast-formal</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">以正式、自信和权威的语气发布新闻。
+</td>
+      </tr>
+	  
+	  
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>poetry-reading</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">在读诗时表达出带情感和节奏的语气。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>sad</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达悲伤语气。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>serious</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达严肃和命令的语气。 说话者的声音通常比较僵硬，节奏也不那么轻松。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>shouting</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达一种听起来好像声音在远处或在另一个地方的语气，努力让别人听清楚。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>sports_commentary</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达一种既轻松又感兴趣的语气，用于播报体育赛事。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>sports_commentary_excited</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">用快速且充满活力的语气播报体育赛事精彩瞬间。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>whispering</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达一种柔和的语气，试图发出安静而柔和的声音。
+</td>
+      </tr>
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>terrified</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达一种害怕的语气，语速快且声音颤抖。 听起来说话人处于不稳定的疯狂状态。
+</td>
+      </tr>
+      
+	  
+	  <tr>
+        <td class="px-6 py-4 whitespace-nowrap"><code>unfriendly</code></td>
+        <td class="px-6 py-4 text-sm text-gray-500">表达一种冷淡无情的语气。</td>
+      </tr>
+    </tbody>
+  </table>
 
-        if (!localStorage.getItem('apiKey') || !localStorage.getItem('selectedModel')) {
-            apiContainer.classList.add('active');
-        } else {
-            apiContainer.classList.remove('active');
-        }
-        apiKeyInput.value = apiKey;
-        modelSelect.value = selectedModel;
-        voiceSelect.value = localStorage.getItem('selectedVoice') || 'FunAudioLLM/CosyVoice2-0.5B:alex';
 
-        toggleVisibility.addEventListener('click', () => {
-            if (apiKeyInput.type === 'password') {
-                apiKeyInput.type = 'text';
-                toggleVisibility.classList.add('show');
-            } else {
-                apiKeyInput.type = 'password';
-                toggleVisibility.classList.remove('show');
-            }
+  <footer class="bg-gray-100 mt-6 mb-2 py-4 mt-8">
+    <div class="container mx-auto text-center text-gray-500 text-sm">
+      版权所有 © 2023 pyvideotrans.com 
+	  
+    </div>
+	<div class="container mx-auto text-center text-gray-500 text-sm"><a href="https://pyvideotrans.com">完整版功能支持语音识别、语音合成、字幕翻译、视频翻译，免费下载 https://pyvideotrans.com</a></div>
+  </footer>
+
+</div>
+
+<script>
+  const app = Vue.createApp({
+    data() {
+      return {
+        text: '',
+		styles:[
+		'friendly',		
+		"advertisement_upbeat",
+		"affectionate",
+		"angry",
+		"assistant",
+		"calm",
+		"chat",
+		"cheerful",
+		"customerservice",
+		"depressed",
+		"disgruntled",
+		"documentary-narration",
+		"embarrassed",
+		"empathetic",
+		"envious",
+		"excited",
+		"fearful",
+		"gentle",
+		"hopeful",
+		"lyrical",
+		"narration-professional",
+		"narration-relaxed",
+		"newscast",
+		"newscast-casual",
+		"newscast-formal",
+		"poetry-reading",
+		"sad",
+		"serious",
+		"shouting",
+		"sports_commentary",
+		"sports_commentary_excited",
+		"whispering",
+		"terrified",
+		"unfriendly"
+		
+		],
+		names:{
+		    "vi":"越南语",
+			"uk":"乌克兰语",
+			"tr":"土耳其语",
+			"th":"泰国语",
+			"sv":"瑞典语",
+			"es":"西班牙语",
+			"ru":"俄罗斯语",
+			"pt":"葡萄牙语",
+			"pl":"波兰语",
+			"ms":"马来西亚语",
+			"ko":"韩语",
+			"kk":"哈萨克斯坦",
+			"ja":"日语",
+			"it":"意大利语",
+			"id":"印尼语",
+			"hu":"匈牙利语",
+			"hi":"印地语",
+			"he":"希伯来语",
+			"zh":"中文",
+			"de":"德语",
+			"fr":"法语",
+			"en":"英语",
+			"nl":"荷兰语",
+			"cs":"捷克语",
+			"bn":"孟加拉语",
+			"ar":"阿拉伯语",
+		 },
+		welcome:{
+		"zh": "你好啊，我亲爱的朋友，希望你的每一天都是美好愉快的！",
+        "en": "Hello, my dear friend. I hope your every day is beautiful and enjoyable!",
+        "fr": "Bonjour mon cher ami. J'espère que votre quotidien est beau et agréable !",
+        "de": "Hallo mein lieber Freund. Ich hoffe, dass Ihr Tag schön und angenehm ist!",
+        "ja": "こんにちは私の親愛なる友人。 あなたの毎日が美しく楽しいものでありますように！",
+        "ko": "안녕, 내 사랑하는 친구. 당신의 매일이 아름답고 즐겁기를 바랍니다!",
+        "ru": "Привет, мой дорогой друг. Желаю, чтобы каждый твой день был прекрасен и приятен!",
+        "es": "Hola mi querido amigo. ¡Espero que cada día sea hermoso y agradable!",
+        "th": "สวัสดีเพื่อนรัก. ฉันหวังว่าทุกวันของคุณจะสวยงามและสนุกสนาน!",
+        "it": "Ciao caro amico mio. Spero che ogni tuo giorno sia bello e divertente!",
+        "pt": "Olá meu querido amigo. Espero que todos os seus dias sejam lindos e agradáveis!",
+        "vi": "Xin chào người bạn thân yêu của tôi. Tôi hy vọng mỗi ngày của bạn đều đẹp và thú vị!",
+        "ar": "مرحبا صديقي العزيز. أتمنى أن يكون كل يوم جميلاً وممتعًا!",
+        "tr": "Merhaba sevgili arkadaşım. Umarım her gününüz güzel ve keyifli geçer!",
+        "hi": "नमस्ते मेरे प्यारे दोस्त। मुझे आशा है कि आपका हर दिन सुंदर और आनंददायक हो!!",
+        "hu": "Helló kedves barátom. Remélem minden napod szép és kellemes!",
+        "uk": "Привіт, мій дорогий друже, сподіваюся, ти щодня прекрасна!",
+        "id": "Halo, temanku, semoga kamu cantik setiap hari!",
+        "ms": "Helo, sahabat saya, saya harap anda cantik setiap hari!",
+        "kk": "Сәлеметсіз бе, менің қымбатты досым, сендер күн сайын әдемісің деп үміттенемін!",
+        "cs": "Ahoj, můj drahý příteli, doufám, že jsi každý den krásná!",
+        "pl": "Witam, mój drogi przyjacielu, mam nadzieję, że jesteś piękna każdego dnia!",
+        "nl": "Hallo mijn lieve vriend, ik hoop dat elke dag goed en fijn voor je is!!",
+        "sv": "Hej min kära vän, jag hoppas att varje dag är en bra och trevlig dag för dig!",		
+		}, 
+        language_role: {  "zh": [
+    
+    "zh-HK-HiuGaaiNeural",
+    "zh-HK-HiuMaanNeural",
+    "zh-HK-WanLungNeural",
+    "zh-CN-XiaoxiaoNeural",
+    "zh-CN-XiaoyiNeural",
+    "zh-CN-YunjianNeural",
+    "zh-CN-YunxiNeural",
+    "zh-CN-YunxiaNeural",
+    "zh-CN-YunyangNeural",
+    "zh-CN-liaoning-XiaobeiNeural",
+    "zh-TW-HsiaoChenNeural",
+    "zh-TW-YunJheNeural",
+    "zh-TW-HsiaoYuNeural",
+    "zh-CN-shaanxi-XiaoniNeural"
+  ],
+  "en": [
+    
+    "en-AU-NatashaNeural",
+    "en-AU-WilliamNeural",
+    "en-CA-ClaraNeural",
+    "en-CA-LiamNeural",
+    "en-HK-SamNeural",
+    "en-HK-YanNeural",
+    "en-IN-NeerjaExpressiveNeural",
+    "en-IN-NeerjaNeural",
+    "en-IN-PrabhatNeural",
+    "en-IE-ConnorNeural",
+    "en-IE-EmilyNeural",
+    "en-KE-AsiliaNeural",
+    "en-KE-ChilembaNeural",
+    "en-NZ-MitchellNeural",
+    "en-NZ-MollyNeural",
+    "en-NG-AbeoNeural",
+    "en-NG-EzinneNeural",
+    "en-PH-JamesNeural",
+    "en-PH-RosaNeural",
+    "en-SG-LunaNeural",
+    "en-SG-WayneNeural",
+    "en-ZA-LeahNeural",
+    "en-ZA-LukeNeural",
+    "en-TZ-ElimuNeural",
+    "en-TZ-ImaniNeural",
+    "en-GB-LibbyNeural",
+    "en-GB-MaisieNeural",
+    "en-GB-RyanNeural",
+    "en-GB-SoniaNeural",
+    "en-GB-ThomasNeural",
+    "en-US-AvaMultilingualNeural",
+    "en-US-AndrewMultilingualNeural",
+    "en-US-EmmaMultilingualNeural",
+    "en-US-BrianMultilingualNeural",
+    "en-US-AvaNeural",
+    "en-US-AndrewNeural",
+    "en-US-EmmaNeural",
+    "en-US-BrianNeural",
+    "en-US-AnaNeural",
+    "en-US-AriaNeural",
+    "en-US-ChristopherNeural",
+    "en-US-EricNeural",
+    "en-US-GuyNeural",
+    "en-US-JennyNeural",
+    "en-US-MichelleNeural",
+    "en-US-RogerNeural",
+    "en-US-SteffanNeural"
+  ],
+	"ja": [
+    
+    "ja-JP-KeitaNeural",
+    "ja-JP-NanamiNeural"
+  ],
+  "ko": [
+    
+    "ko-KR-HyunsuNeural",
+    "ko-KR-InJoonNeural",
+    "ko-KR-SunHiNeural"
+  ],
+  "fr": [
+    
+    "fr-BE-CharlineNeural",
+    "fr-BE-GerardNeural",
+    "fr-CA-ThierryNeural",
+    "fr-CA-AntoineNeural",
+    "fr-CA-JeanNeural",
+    "fr-CA-SylvieNeural",
+    "fr-FR-VivienneMultilingualNeural",
+    "fr-FR-RemyMultilingualNeural",
+    "fr-FR-DeniseNeural",
+    "fr-FR-EloiseNeural",
+    "fr-FR-HenriNeural",
+    "fr-CH-ArianeNeural",
+    "fr-CH-FabriceNeural"
+  ],
+  
+  "de": [
+    
+    "de-AT-IngridNeural",
+    "de-AT-JonasNeural",
+    "de-DE-SeraphinaMultilingualNeural",
+    "de-DE-FlorianMultilingualNeural",
+    "de-DE-AmalaNeural",
+    "de-DE-ConradNeural",
+    "de-DE-KatjaNeural",
+    "de-DE-KillianNeural",
+    "de-CH-JanNeural",
+    "de-CH-LeniNeural"
+  ],
+  "ru": [
+    
+    "ru-RU-DmitryNeural",
+    "ru-RU-SvetlanaNeural"
+  ],
+  
+  "es": [
+    
+    "es-AR-ElenaNeural",
+    "es-AR-TomasNeural",
+    "es-BO-MarceloNeural",
+    "es-BO-SofiaNeural",
+    "es-CL-CatalinaNeural",
+    "es-CL-LorenzoNeural",
+    "es-ES-XimenaNeural",
+    "es-CO-GonzaloNeural",
+    "es-CO-SalomeNeural",
+    "es-CR-JuanNeural",
+    "es-CR-MariaNeural",
+    "es-CU-BelkysNeural",
+    "es-CU-ManuelNeural",
+    "es-DO-EmilioNeural",
+    "es-DO-RamonaNeural",
+    "es-EC-AndreaNeural",
+    "es-EC-LuisNeural",
+    "es-SV-LorenaNeural",
+    "es-SV-RodrigoNeural",
+    "es-GQ-JavierNeural",
+    "es-GQ-TeresaNeural",
+    "es-GT-AndresNeural",
+    "es-GT-MartaNeural",
+    "es-HN-CarlosNeural",
+    "es-HN-KarlaNeural",
+    "es-MX-DaliaNeural",
+    "es-MX-JorgeNeural",
+    "es-NI-FedericoNeural",
+    "es-NI-YolandaNeural",
+    "es-PA-MargaritaNeural",
+    "es-PA-RobertoNeural",
+    "es-PY-MarioNeural",
+    "es-PY-TaniaNeural",
+    "es-PE-AlexNeural",
+    "es-PE-CamilaNeural",
+    "es-PR-KarinaNeural",
+    "es-PR-VictorNeural",
+    "es-ES-AlvaroNeural",
+    "es-ES-ElviraNeural",
+    "es-US-AlonsoNeural",
+    "es-US-PalomaNeural",
+    "es-UY-MateoNeural",
+    "es-UY-ValentinaNeural",
+    "es-VE-PaolaNeural",
+    "es-VE-SebastianNeural"
+  ],
+  "vi": [
+    
+    "vi-VN-HoaiMyNeural",
+    "vi-VN-NamMinhNeural"
+  ],"th": [
+    
+    "th-TH-NiwatNeural",
+    "th-TH-PremwadeeNeural"
+  ],
+  "ar": [
+    
+    "ar-DZ-AminaNeural",
+    "ar-DZ-IsmaelNeural",
+    "ar-BH-AliNeural",
+    "ar-BH-LailaNeural",
+    "ar-EG-SalmaNeural",
+    "ar-EG-ShakirNeural",
+    "ar-IQ-BasselNeural",
+    "ar-IQ-RanaNeural",
+    "ar-JO-SanaNeural",
+    "ar-JO-TaimNeural",
+    "ar-KW-FahedNeural",
+    "ar-KW-NouraNeural",
+    "ar-LB-LaylaNeural",
+    "ar-LB-RamiNeural",
+    "ar-LY-ImanNeural",
+    "ar-LY-OmarNeural",
+    "ar-MA-JamalNeural",
+    "ar-MA-MounaNeural",
+    "ar-OM-AbdullahNeural",
+    "ar-OM-AyshaNeural",
+    "ar-QA-AmalNeural",
+    "ar-QA-MoazNeural",
+    "ar-SA-HamedNeural",
+    "ar-SA-ZariyahNeural",
+    "ar-SY-AmanyNeural",
+    "ar-SY-LaithNeural",
+    "ar-TN-HediNeural",
+    "ar-TN-ReemNeural",
+    "ar-AE-FatimaNeural",
+    "ar-AE-HamdanNeural",
+    "ar-YE-MaryamNeural",
+    "ar-YE-SalehNeural"
+  ],
+
+  "bn": [
+    
+    "bn-BD-NabanitaNeural",
+    "bn-BD-PradeepNeural",
+    "bn-IN-BashkarNeural",
+    "bn-IN-TanishaaNeural"
+  ],
+
+  "cs": [
+    
+    "cs-CZ-AntoninNeural",
+    "cs-CZ-VlastaNeural"
+  ],
+  
+  "nl": [
+    
+    "nl-BE-ArnaudNeural",
+    "nl-BE-DenaNeural",
+    "nl-NL-ColetteNeural",
+    "nl-NL-FennaNeural",
+    "nl-NL-MaartenNeural"
+  ],
+  
+  
+  "he": [
+    
+    "he-IL-AvriNeural",
+    "he-IL-HilaNeural"
+  ],
+  "hi": [
+    
+    "hi-IN-MadhurNeural",
+    "hi-IN-SwaraNeural"
+  ],
+  "hu": [
+    
+    "hu-HU-NoemiNeural",
+    "hu-HU-TamasNeural"
+  ],
+  
+  "id": [
+    
+    "id-ID-ArdiNeural",
+    "id-ID-GadisNeural"
+  ],
+  
+  "it": [
+    
+    "it-IT-GiuseppeNeural",
+    "it-IT-DiegoNeural",
+    "it-IT-ElsaNeural",
+    "it-IT-IsabellaNeural"
+  ],
+  
+  
+  "kk": [
+    
+    "kk-KZ-AigulNeural",
+    "kk-KZ-DauletNeural"
+  ],
+  
+  
+  
+  "ms": [
+    
+    "ms-MY-OsmanNeural",
+    "ms-MY-YasminNeural"
+  ],
+  
+  "pl": [
+    
+    "pl-PL-MarekNeural",
+    "pl-PL-ZofiaNeural"
+  ],
+  "pt": [
+    
+    "pt-BR-ThalitaNeural",
+    "pt-BR-AntonioNeural",
+    "pt-BR-FranciscaNeural",
+    "pt-PT-DuarteNeural",
+    "pt-PT-RaquelNeural"
+  ],
+ 
+  
+
+  "sv": [
+    
+    "sv-SE-MattiasNeural",
+    "sv-SE-SofieNeural"
+  ],
+ 
+  
+  "tr": [
+    
+    "tr-TR-AhmetNeural",
+    "tr-TR-EmelNeural"
+  ],
+  "uk": [
+    
+    "uk-UA-OstapNeural",
+    "uk-UA-PolinaNeural"
+  ],
+  
+  
+ 
+},
+        selectedLanguage: 'zh',
+        selectedVoice: '',
+		selectedStyle:'friendly',
+        speed: 1.0,
+        volume: 1.0,
+        pitch: 0,
+        isGenerating: false,
+        apiKey: 'adgas213423235saeg' // Replace with your actual API key
+      };
+    },
+	watch: {
+      selectedLanguage(newLanguage) {
+        // This will run whenever selectedLanguage changes
+        this.$nextTick(() => {
+          if (this.voices.length > 0) {
+            this.selectedVoice = this.voices[0];
+          } else {
+            // Handle the case where the new language has no voices
+            this.selectedVoice = null; 
+            console.warn(`No voices available for language: ${newLanguage}`);
+          }          
         });
-
-        toggleApiButton.addEventListener('click', () => {
-            apiContainer.classList.toggle('active');
-        });
-
-        saveApiButton.addEventListener('click', () => {
-            const newApiKey = apiKeyInput.value.trim();
-            const newModel = modelSelect.value;
-            const newVoice = voiceSelect.value;
-            if (newApiKey && newModel && newVoice) {
-                apiKey = newApiKey;
-                selectedModel = newModel;
-                localStorage.setItem('apiKey', newApiKey);
-                localStorage.setItem('selectedModel', newModel);
-                localStorage.setItem('selectedVoice', newVoice);
-                apiContainer.classList.remove('active');
-                appendMessage('assistant', 'API Key、模型和语音已更新');
-            } else {
-                appendMessage('assistant', '请输入有效的 API Key 并选择模型和语音');
-            }
-        });
-
-        function appendMessage(role, content, audioUrl = null) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${role}`;
-
-            const toolsDiv = document.createElement('div');
-            toolsDiv.className = 'message-tools';
-            const readButton = document.createElement('button');
-            readButton.textContent = '🔊';
-            readButton.title = '朗读';
-            readButton.onclick = () => toggleAudio({ target: messageDiv.querySelector('.speak-icon') });
-            const copyButton = document.createElement('button');
-            copyButton.textContent = '📋';
-            copyButton.title = '复制';
-            copyButton.onclick = () => {
-                navigator.clipboard.writeText(content).then(() => {
-                    alert('已复制到剪贴板');
-                }).catch(err => {
-                    alert('复制失败: ' + err);
-                });
-            };
-            toolsDiv.appendChild(readButton);
-            toolsDiv.appendChild(copyButton);
-            messageDiv.appendChild(toolsDiv);
-
-            const contentSpan = document.createElement('span');
-            contentSpan.textContent = `${role === 'user' ? '你' : 'AI'}: ${content} `;
-            messageDiv.appendChild(contentSpan);
-
-            const speakIcon = document.createElement('span');
-            speakIcon.className = 'speak-icon';
-            speakIcon.dataset.audioUrl = audioUrl || '';
-            speakIcon.dataset.text = content;
-            speakIcon.onclick = toggleAudio;
-            messageDiv.appendChild(speakIcon);
-
-            chatHistory.appendChild(messageDiv);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-            conversationHistory.push({ role, content });
-
-            if (audioUrl) {
-                const audio = new Audio(audioUrl);
-                audioStates.set(speakIcon, { audio, isPlaying: false });
-            }
-            return messageDiv;
+      }
+    },
+     mounted() {
+          // Ensure language_role is loaded before setting default voice
+          this.$nextTick(() => {
+            this.selectedVoice = this.voices[0];
+          });
+        },   
+ computed: {
+      voices() {
+        return this.language_role[this.selectedLanguage] || [];
+      }
+    },
+    methods: {
+      handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.text = e.target.result;
+          };
+          reader.readAsText(file);
         }
+      },
+	  shiting(){
+	    if(!this.selectedVoice || this.selectedVoice=='No'){
+			
+			return alert('必须选择音色');
+		}
+		this.generateSpeech(this.welcome[this.selectedLanguage])
+		
+	  },
+      parseText() {
+		console.log('aaaaa')
+			  let lines = this.text.trim().split('\n');
+			  console.log(lines)
 
-        function toggleAudio(event) {
-            const speakIcon = event.target;
-            const audioUrl = speakIcon.dataset.audioUrl;
-            const text = speakIcon.dataset.text;
-            const state = audioStates.get(speakIcon);
+		  let filteredLines = [];
+			for (let i = 0; i < lines.length; i++) {
+				let line = lines[i].trim();
+			const isSequenceNumber = /^\s*?\d+\s*?$/;
+			const isTimecode = /^\d{1,2}:\d{1,2}:\d{1,2}(,\d{1,3})?\s*?\-\->\s*?\d{1,2}:\d{1,2}:\d{1,2}(,\d{1,3})\s*?$/;
 
-            if (state && audioUrl) {
-                const audio = state.audio;
-                if (state.isPlaying) {
-                    audio.pause();
-                    state.isPlaying = false;
-                    speakIcon.classList.remove('playing');
-                } else {
-                    audioStates.forEach((otherState, otherIcon) => {
-                        if (otherState.isPlaying) {
-                            otherState.audio.pause();
-                            otherState.isPlaying = false;
-                            otherIcon.classList.remove('playing');
-                        }
-                    });
-                    audio.play();
-                    state.isPlaying = true;
-                    speakIcon.classList.add('playing');
-                    audio.onended = () => {
-                        state.isPlaying = false;
-                        speakIcon.classList.remove('playing');
-                    };
-                }
-            } else if (text) {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'zh-CN';
-                window.speechSynthesis.speak(utterance);
-            }
+				if (isSequenceNumber.test(line)) {
+				  // Check if the next line is a timecode
+					if (i + 1 < lines.length && isTimecode.test(lines[i + 1].trim())) {
+						continue; // Skip this line (sequence number) if the next line is a timecode
+					}
+				} else if (isTimecode.test(line)) {
+				continue; // Skip this line if it's a timecode
+			}
+
+			  if (line !== '') { // Add the line only if it's not empty after trimming
+				filteredLines.push(line);      
+			  }
+			}
+
+
+		  return filteredLines.join('\n');
+		},
+ async generateSpeech(listener_text) {
+ console.log(listener_text)
+        const workerUrl = 'https://ttsapi.pyvideotrans.com/v1/audio/speech';
+        const parsedText = typeof listener_text==='string'?listener_text:this.parseText();
+		if(!this.selectedVoice || this.selectedVoice=='No'){
+			
+			return alert('必须选择音色');
+		}
+		if(!parsedText){
+			
+			return alert('必须上传或输入要合成的文字');
+		}
+        console.log(parsedText)
+        const requestBody = {
+          "model": "tts-1",
+          "input": parsedText,
+          "voice": this.selectedVoice,
+          "response_format": "mp3",
+          "speed": this.speed,
+          "volume": this.volume,
+          "pitch": this.pitch,
+		  "style":this.selectedStyle
+        };
+		console.log(requestBody);
+		
+		//return
+        this.isGenerating = true;
+		
+
+        try {
+          const response = await fetch(workerUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${this.apiKey}`,
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+      if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+          }
+
+          const audioBlob = await response.blob();
+		const audioUrl = URL.createObjectURL(audioBlob);
+
+		// Remove existing audio element and download button if any
+		const existingAudio = document.getElementById('audioElement');
+		if (existingAudio) {
+		  existingAudio.remove();
+		}
+		const existingDownloadButton = document.getElementById('downloadButton');
+		if (existingDownloadButton) {
+		  existingDownloadButton.remove();
+		}
+
+
+	const audioElement = document.createElement('audio');
+	audioElement.id = 'audioElement';
+	audioElement.src = audioUrl;
+	audioElement.controls = true;
+	audioElement.autoplay = true;
+
+
+	// Create download button
+	const downloadButton = document.createElement('button');
+	downloadButton.id = 'downloadButton';
+	downloadButton.textContent = '下载';
+	downloadButton.className = 'ml-2    font-bold py-2 px-4 rounded'; // Add some basic styling
+
+	// Add download functionality
+	downloadButton.addEventListener('click', () => {
+		const link = document.createElement('a');
+		link.href = audioUrl;
+		link.download = getmp3name(); // Set default filename
+		document.body.appendChild(link); // Required for Firefox
+	  link.click();
+		document.body.removeChild(link); // Clean up
+	});
+
+	if(typeof listener_text !=='string'){    
+		const audioContainer = document.getElementById('audioContainer');
+		audioContainer.appendChild(audioElement);
+	  audioContainer.appendChild(downloadButton); // Append button to the same container  
+	}
+
+
+        } catch (error) {
+          console.error('Error generating speech:', error);
+          alert("Error generating speech: " + error.message);
+        } finally {
+          this.isGenerating = false;
         }
+      }
+    }
+  }).mount('#app');
+  
+  function getmp3name() {
+  const now = new Date();
 
-        async function convertWebmToWav(blob) {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-            const arrayBuffer = await blob.arrayBuffer();
-            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-            const wavBuffer = audioBufferToWav(audioBuffer);
-            return new Blob([wavBuffer], { type: 'audio/wav' });
-        }
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
 
-        function audioBufferToWav(audioBuffer) {
-            const numOfChan = 1;
-            const length = audioBuffer.length * numOfChan * 2 + 44;
-            const buffer = new ArrayBuffer(length);
-            const view = new DataView(buffer);
-            const sampleRate = 16000;
-
-            writeString(view, 0, 'RIFF');
-            view.setUint32(4, 36 + audioBuffer.length * numOfChan * 2, true);
-            writeString(view, 8, 'WAVE');
-            writeString(view, 12, 'fmt ');
-            view.setUint32(16, 16, true);
-            view.setUint16(20, 1, true);
-            view.setUint16(22, numOfChan, true);
-            view.setUint32(24, sampleRate, true);
-            view.setUint32(28, sampleRate * numOfChan * 2, true);
-            view.setUint16(32, numOfChan * 2, true);
-            view.setUint16(34, 16, true);
-            writeString(view, 36, 'data');
-            view.setUint32(40, audioBuffer.length * numOfChan * 2, true);
-
-            const channelData = audioBuffer.getChannelData(0);
-            let offset = 44;
-            for (let i = 0; i < audioBuffer.length; i++, offset += 2) {
-                const s = Math.max(-1, Math.min(1, channelData[i]));
-                view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-            }
-            return buffer;
-        }
-
-        function writeString(view, offset, string) {
-            for (let i = 0; i < string.length; i++) {
-                view.setUint8(offset + i, string.charCodeAt(i));
-            }
-        }
-
-        async function sendMessage(audioBlob = null) {
-            let message = audioBlob ? null : userInput.value.trim();
-            if (!audioBlob && message === '') return;
-
-            if (!apiKey) {
-                appendMessage('assistant', '请先设置有效的 API Key');
-                apiContainer.classList.add('active');
-                return;
-            }
-
-            if (audioBlob) {
-                const wavBlob = await convertWebmToWav(audioBlob);
-                const formData = new FormData();
-                formData.append('model', 'FunAudioLLM/SenseVoiceSmall');
-                formData.append('file', wavBlob, 'audio.wav');
-                formData.append('language', 'zh');
-
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 30000);
-                    const asrResponse = await fetch('https://api.siliconflow.cn/v1/audio/transcriptions', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${apiKey}`
-                        },
-                        body: formData,
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-
-                    if (!asrResponse.ok) {
-                        const errorText = await asrResponse.text();
-                        throw new Error(`ASR 请求失败，状态码: ${asrResponse.status}, 响应: ${errorText}`);
-                    }
-
-                    const asrData = await asrResponse.json();
-                    message = asrData.text || '错误：无法转录语音';
-                } catch (error) {
-                    if (error.name === 'AbortError') {
-                        message = '错误：语音识别请求超时，请检查网络';
-                    } else {
-                        message = `错误：语音识别失败 - ${error.message}`;
-                    }
-                }
-            }
-
-            appendMessage('user', message);
-            userInput.value = '';
-
-            try {
-                const chatController = new AbortController();
-                const chatTimeoutId = setTimeout(() => chatController.abort(), 30000);
-                const chatResponse = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: selectedModel,
-                        messages: conversationHistory.map(msg => ({
-                            role: msg.role === 'user' ? 'user' : 'assistant',
-                            content: msg.content
-                        }))
-                    }),
-                    signal: chatController.signal
-                });
-                clearTimeout(chatTimeoutId);
-
-                if (!chatResponse.ok) {
-                    throw new Error(`Chat 请求失败，状态码: ${chatResponse.status}`);
-                }
-
-                const chatData = await chatResponse.json();
-                const assistantMessage = chatData.choices[0].message.content;
-
-                const selectedVoice = voiceSelect.value;
-                const ttsController = new AbortController();
-                const ttsTimeoutId = setTimeout(() => ttsController.abort(), 30000);
-                const ttsResponse = await fetch('https://api.siliconflow.cn/v1/audio/speech', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: 'FunAudioLLM/CosyVoice2-0.5B',
-                        voice: selectedVoice,
-                        input: assistantMessage,
-                        response_format: 'mp3'
-                    }),
-                    signal: ttsController.signal
-                });
-                clearTimeout(ttsTimeoutId);
-
-                if (!ttsResponse.ok) {
-                    const errorText = await ttsResponse.text();
-                    throw new Error(`TTS 请求失败，状态码: ${ttsResponse.status}, 响应: ${errorText}`);
-                }
-
-                const audioBlob = await ttsResponse.blob();
-                const audioUrl = URL.createObjectURL(audioBlob);
-                const messageDiv = appendMessage('assistant', assistantMessage, audioUrl);
-
-                const speakIcon = messageDiv.querySelector('.speak-icon');
-                const audio = audioStates.get(speakIcon).audio;
-
-                audioStates.forEach((state, icon) => {
-                    if (state.isPlaying) {
-                        state.audio.pause();
-                        state.isPlaying = false;
-                        icon.classList.remove('playing');
-                    }
-                });
-
-                audio.play();
-                audioStates.get(speakIcon).isPlaying = true;
-                speakIcon.classList.add('playing');
-                audio.onended = () => {
-                    audioStates.get(speakIcon).isPlaying = false;
-                    speakIcon.classList.remove('playing');
-                };
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    appendMessage('assistant', '错误：请求超时，请检查网络');
-                } else {
-                    appendMessage('assistant', `错误：无法获取响应 - ${error.message}`);
-                }
-            }
-        }
-
-        function clearChat() {
-            chatHistory.innerHTML = '';
-            audioStates.forEach(state => {
-                if (state.audio.src) {
-                    URL.revokeObjectURL(state.audio.src);
-                }
-            });
-            audioStates.clear();
-            conversationHistory.length = 0;
-        }
-
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            let mediaRecorder;
-            let audioChunks = [];
-            let isRecording = false;
-            let recordingTimeout;
-
-            micButton.addEventListener('click', async () => {
-                if (!isRecording) {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    mediaRecorder.start();
-                    micButton.classList.add('recording');
-                    isRecording = true;
-
-                    recordingTimeout = setTimeout(() => {
-                        if (isRecording) {
-                            mediaRecorder.stop();
-                            micButton.classList.remove('recording');
-                            isRecording = false;
-                        }
-                    }, maxRecordingTime);
-
-                    mediaRecorder.ondataavailable = (event) => {
-                        audioChunks.push(event.data);
-                    };
-
-                    mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        sendMessage(audioBlob);
-                        audioChunks = [];
-                        stream.getTracks().forEach(track => track.stop());
-                        clearTimeout(recordingTimeout);
-                        micButton.classList.remove('recording');
-                        isRecording = false;
-                    };
-                } else {
-                    mediaRecorder.stop();
-                    clearTimeout(recordingTimeout);
-                }
-            });
-        } else {
-            micButton.style.display = 'none';
-        }
-
-        sendButton.addEventListener('click', () => sendMessage());
-        clearButton.addEventListener('click', clearChat);
-        userInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-    </script>
+  return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}.mp3`;
+}
+</script>
+<script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
+<script>LA.init({id:"KO5lYldwVUTyC8eE",ck:"KO5lYldwVUTyC8eE"})</script>
+	
 </body>
 </html>
