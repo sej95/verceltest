@@ -47,6 +47,7 @@
 </head>
 <body class="bg-gray-100 font-sans">
   <div id="app">
+    <!-- 将导航栏移入 #app 容器内 -->
     <ul id="layui-nav" class="layui-nav">
       <li class="layui-nav-item"><a href="#" @click.prevent="toggleStyleTable">iuai</a></li>
     </ul>
@@ -115,17 +116,13 @@
       
       <div id="audioContainer" class="my-3 text-center bg-white flex justify-center py-3 "></div>
       
-      <!-- 进度显示 -->
-      <div v-if="isGenerating" class="text-center my-4">
-        <p>合成进度: {{ progress }} / {{ totalSegments }}</p>
-      </div>
-
       <div class="mt-8 text-center">
         <button @click="generateSpeech" :disabled="isGenerating" class="bg-red-500 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
           {{ isGenerating ? '语音合成中...' : '执行合成语音' }}
         </button>
       </div>
 
+      <!-- 语气风格说明表格，默认隐藏 -->
       <table v-show="showStyleTable" class="min-w-full divide-y divide-gray-200 my-4">
         <thead class="bg-gray-50">
           <tr>
@@ -134,10 +131,141 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <!-- 表格内容保持不变，略去以节省篇幅 -->
-          <tr v-for="style in styles" :key="style">
-            <td class="px-6 py-4 whitespace-nowrap"><code>{{ style }}</code></td>
-            <td class="px-6 py-4 text-sm text-gray-500">{{ styleDescriptions[style] }}</td>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>friendly</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达一种愉快、怡人且温暖的语气。 听起来很真诚且满怀关切。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>advertisement_upbeat</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">用兴奋和精力充沛的语气推广产品或服务。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>affectionate</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">以较高的音调和音量表达温暖而亲切的语气。 说话者处于吸引听众注意力的状态。 说话者的个性往往是讨喜的。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>angry</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达生气和厌恶的语气。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>assistant</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">数字助理用的是热情而轻松的语气。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>calm</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">以沉着冷静的态度说话。 语气、音调和韵律与其他语音类型相比要统一得多。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>chat</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达轻松随意的语气。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>cheerful</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达积极愉快的语气。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>customerservice</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">以友好热情的语气为客户提供支持。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>depressed</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">调低音调和音量来表达忧郁、沮丧的语气。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>disgruntled</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达轻蔑和抱怨的语气。 这种情绪的语音表现出不悦和蔑视。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>documentary-narration</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">用一种轻松、感兴趣和信息丰富的风格讲述纪录片，适合纪录片、专家评论和类似内容。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>embarrassed</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">在说话者感到不舒适时表达不确定、犹豫的语气。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>empathetic</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达关心和理解。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>envious</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">当你渴望别人拥有的东西时，表达一种钦佩的语气。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>excited</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达乐观和充满希望的语气。 似乎发生了一些美好的事情，说话人对此满意。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>fearful</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">以较高的音调、较高的音量和较快的语速来表达恐惧、紧张的语气。 说话人处于紧张和不安的状态。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>gentle</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">以较低的音调和音量表达温和、礼貌和愉快的语气。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>hopeful</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达一种温暖且渴望的语气。 听起来像是会有好事发生在说话人身上。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>lyrical</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">以优美又带感伤的方式表达情感。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>narration-professional</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">以专业、客观的语气朗读内容。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>narration-relaxed</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">为内容阅读表达一种舒缓而悦耳的语气。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>newscast</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">以正式专业的语气叙述新闻。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>newscast-casual</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">以通用、随意的语气发布一般新闻。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>newscast-formal</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">以正式、自信和权威的语气发布新闻。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>poetry-reading</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">在读诗时表达出带情感和节奏的语气。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>sad</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达悲伤语气。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>serious</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达严肃和命令的语气。 说话者的声音通常比较僵硬，节奏也不那么轻松。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>shouting</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达一种听起来好像声音在远处或在另一个地方的语气，努力让别人听清楚。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>sports_commentary</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达一种既轻松又感兴趣的语气，用于播报体育赛事。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>sports_commentary_excited</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">用快速且充满活力的语气播报体育赛事精彩瞬间。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>whispering</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达一种柔和的语气，试图发出安静而柔和的声音。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>terrified</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达一种害怕的语气，语速快且声音颤抖。 听起来说话人处于不稳定的疯狂状态。</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap"><code>unfriendly</code></td>
+            <td class="px-6 py-4 text-sm text-gray-500">表达一种冷淡无情的语气。</td>
           </tr>
         </tbody>
       </table>
@@ -156,20 +284,361 @@
         return {
           text: '',
           styles: [
-            'friendly', 'advertisement_upbeat', 'affectionate', 'angry', 'assistant', 'calm', 'chat', 'cheerful',
-            'customerservice', 'depressed', 'disgruntled', 'documentary-narration', 'embarrassed', 'empathetic',
-            'envious', 'excited', 'fearful', 'gentle', 'hopeful', 'lyrical', 'narration-professional', 'narration-relaxed',
-            'newscast', 'newscast-casual', 'newscast-formal', 'poetry-reading', 'sad', 'serious', 'shouting',
-            'sports_commentary', 'sports_commentary_excited', 'whispering', 'terrified', 'unfriendly'
+            'friendly',    
+            "advertisement_upbeat",
+            "affectionate",
+            "angry",
+            "assistant",
+            "calm",
+            "chat",
+            "cheerful",
+            "customerservice",
+            "depressed",
+            "disgruntled",
+            "documentary-narration",
+            "embarrassed",
+            "empathetic",
+            "envious",
+            "excited",
+            "fearful",
+            "gentle",
+            "hopeful",
+            "lyrical",
+            "narration-professional",
+            "narration-relaxed",
+            "newscast",
+            "newscast-casual",
+            "newscast-formal",
+            "poetry-reading",
+            "sad",
+            "serious",
+            "shouting",
+            "sports_commentary",
+            "sports_commentary_excited",
+            "whispering",
+            "terrified",
+            "unfriendly"
           ],
-          styleDescriptions: {
-            'friendly': '表达一种愉快、怡人且温暖的语气。 听起来很真诚且满怀关切。',
-            'advertisement_upbeat': '用兴奋和精力充沛的语气推广产品或服务。',
-            // 其他风格说明略去，可从原代码复制
+          names: {
+            "vi": "越南语",
+            "uk": "乌克兰语",
+            "tr": "土耳其语",
+            "th": "泰国语",
+            "sv": "瑞典语",
+            "es": "西班牙语",
+            "ru": "俄罗斯语",
+            "pt": "葡萄牙语",
+            "pl": "波兰语",
+            "ms": "马来西亚语",
+            "ko": "韩语",
+            "kk": "哈萨克斯坦",
+            "ja": "日语",
+            "it": "意大利语",
+            "id": "印尼语",
+            "hu": "匈牙利语",
+            "hi": "印地语",
+            "he": "希伯来语",
+            "zh": "中文",
+            "de": "德语",
+            "fr": "法语",
+            "en": "英语",
+            "nl": "荷兰语",
+            "cs": "捷克语",
+            "bn": "孟加拉语",
+            "ar": "阿拉伯语",
           },
-          names: { /* 语言名称保持不变 */ },
-          welcome: { /* 欢迎语保持不变 */ },
-          language_role: { /* 语言角色保持不变 */ },
+          welcome: {
+            "zh": "你好啊，我亲爱的朋友，希望你的每一天都是美好愉快的！",
+            "en": "Hello, my dear friend. I hope your every day is beautiful and enjoyable!",
+            "fr": "Bonjour mon cher ami. J'espère que votre quotidien est beau et agréable !",
+            "de": "Hallo mein lieber Freund. Ich hoffe, dass Ihr Tag schön und angenehm ist!",
+            "ja": "こんにちは私の親愛なる友人。 あなたの毎日が美しく楽しいものでありますように！",
+            "ko": "안녕, 내 사랑하는 친구. 당신의 매일이 아름답고 즐겁기를 바랍니다!",
+            "ru": "Привет, мой дорогой друг. Желаю, чтобы каждый твой день был прекрасен и приятен!",
+            "es": "Hola mi querido amigo. ¡Espero que cada día sea hermoso y agradable!",
+            "th": "สวัสดีเพื่อนรัก. ฉันหวังว่าทุกวันของคุณจะสวยงามและสนุกสนาน!",
+            "it": "Ciao caro amico mio. Spero che ogni tuo giorno sia bello e divertente!",
+            "pt": "Olá meu querido amigo. Espero que todos os seus dias sejam lindos e agradáveis!",
+            "vi": "Xin chào người bạn thân yêu của tôi. Tôi hy vọng mỗi ngày của bạn đều đẹp và thú vị!",
+            "ar": "مرحبا صديقي العزيز. أتمنى أن يكون كل يوم جميلاً وممتعًا!",
+            "tr": "Merhaba sevgili arkadaşım. Umarım her gününüz güzel ve keyifli geçer!",
+            "hi": "नमस्ते मेरे प्यारे दोस्त। मुझे आशा है कि आपका हर दिन सुंदर और आनंददायक हो!!",
+            "hu": "Helló kedves barátom. Remélem minden napod szép és kellemes!",
+            "uk": "Привіт, мій дорогий друже, сподіваюся, ти щодня прекрасна!",
+            "id": "Halo, temanku, semoga kamu cantik setiap hari!",
+            "ms": "Helo, sahabat saya, saya harap anda cantik setiap hari!",
+            "kk": "Сәлеметсіз бе, менің қымбатты досым, сендер күн сайын әдемісің деп үміттенемін!",
+            "cs": "Ahoj, můj drahý příteli, doufám, že jsi každý den krásná!",
+            "pl": "Witam, mój drogi przyjacielu, mam nadzieję, że jesteś piękna każdego dnia!",
+            "nl": "Hallo mijn lieve vriend, ik hoop dat elke dag goed en fijn voor je is!!",
+            "sv": "Hej min kära vän, jag hoppas att varje dag är en bra och trevlig dag för dig!",
+          }, 
+          language_role: {  
+            "zh": [
+              "zh-HK-HiuGaaiNeural",
+              "zh-HK-HiuMaanNeural",
+              "zh-HK-WanLungNeural",
+              "zh-CN-XiaoxiaoNeural",
+              "zh-CN-XiaoyiNeural",
+              "zh-CN-YunjianNeural",
+              "zh-CN-YunxiNeural",
+              "zh-CN-YunxiaNeural",
+              "zh-CN-YunyangNeural",
+              "zh-CN-liaoning-XiaobeiNeural",
+              "zh-TW-HsiaoChenNeural",
+              "zh-TW-YunJheNeural",
+              "zh-TW-HsiaoYuNeural",
+              "zh-CN-shaanxi-XiaoniNeural"
+            ],
+            "en": [
+              "en-AU-NatashaNeural",
+              "en-AU-WilliamNeural",
+              "en-CA-ClaraNeural",
+              "en-CA-LiamNeural",
+              "en-HK-SamNeural",
+              "en-HK-YanNeural",
+              "en-IN-NeerjaExpressiveNeural",
+              "en-IN-NeerjaNeural",
+              "en-IN-PrabhatNeural",
+              "en-IE-ConnorNeural",
+              "en-IE-EmilyNeural",
+              "en-KE-AsiliaNeural",
+              "en-KE-ChilembaNeural",
+              "en-NZ-MitchellNeural",
+              "en-NZ-MollyNeural",
+              "en-NG-AbeoNeural",
+              "en-NG-EzinneNeural",
+              "en-PH-JamesNeural",
+              "en-PH-RosaNeural",
+              "en-SG-LunaNeural",
+              "en-SG-WayneNeural",
+              "en-ZA-LeahNeural",
+              "en-ZA-LukeNeural",
+              "en-TZ-ElimuNeural",
+              "en-TZ-ImaniNeural",
+              "en-GB-LibbyNeural",
+              "en-GB-MaisieNeural",
+              "en-GB-RyanNeural",
+              "en-GB-SoniaNeural",
+              "en-GB-ThomasNeural",
+              "en-US-AvaMultilingualNeural",
+              "en-US-AndrewMultilingualNeural",
+              "en-US-EmmaMultilingualNeural",
+              "en-US-BrianMultilingualNeural",
+              "en-US-AvaNeural",
+              "en-US-AndrewNeural",
+              "en-US-EmmaNeural",
+              "en-US-BrianNeural",
+              "en-US-AnaNeural",
+              "en-US-AriaNeural",
+              "en-US-ChristopherNeural",
+              "en-US-EricNeural",
+              "en-US-GuyNeural",
+              "en-US-JennyNeural",
+              "en-US-MichelleNeural",
+              "en-US-RogerNeural",
+              "en-US-SteffanNeural"
+            ],
+            "ja": [
+              "ja-JP-KeitaNeural",
+              "ja-JP-NanamiNeural"
+            ],
+            "ko": [
+              "ko-KR-HyunsuNeural",
+              "ko-KR-InJoonNeural",
+              "ko-KR-SunHiNeural"
+            ],
+            "fr": [
+              "fr-BE-CharlineNeural",
+              "fr-BE-GerardNeural",
+              "fr-CA-ThierryNeural",
+              "fr-CA-AntoineNeural",
+              "fr-CA-JeanNeural",
+              "fr-CA-SylvieNeural",
+              "fr-FR-VivienneMultilingualNeural",
+              "fr-FR-RemyMultilingualNeural",
+              "fr-FR-DeniseNeural",
+              "fr-FR-EloiseNeural",
+              "fr-FR-HenriNeural",
+              "fr-CH-ArianeNeural",
+              "fr-CH-FabriceNeural"
+            ],
+            "de": [
+              "de-AT-IngridNeural",
+              "de-AT-JonasNeural",
+              "de-DE-SeraphinaMultilingualNeural",
+              "de-DE-FlorianMultilingualNeural",
+              "de-DE-AmalaNeural",
+              "de-DE-ConradNeural",
+              "de-DE-KatjaNeural",
+              "de-DE-KillianNeural",
+              "de-CH-JanNeural",
+              "de-CH-LeniNeural"
+            ],
+            "ru": [
+              "ru-RU-DmitryNeural",
+              "ru-RU-SvetlanaNeural"
+            ],
+            "es": [
+              "es-AR-ElenaNeural",
+              "es-AR-TomasNeural",
+              "es-BO-MarceloNeural",
+              "es-BO-SofiaNeural",
+              "es-CL-CatalinaNeural",
+              "es-CL-LorenzoNeural",
+              "es-ES-XimenaNeural",
+              "es-CO-GonzaloNeural",
+              "es-CO-SalomeNeural",
+              "es-CR-JuanNeural",
+              "es-CR-MariaNeural",
+              "es-CU-BelkysNeural",
+              "es-CU-ManuelNeural",
+              "es-DO-EmilioNeural",
+              "es-DO-RamonaNeural",
+              "es-EC-AndreaNeural",
+              "es-EC-LuisNeural",
+              "es-SV-LorenaNeural",
+              "es-SV-RodrigoNeural",
+              "es-GQ-JavierNeural",
+              "es-GQ-TeresaNeural",
+              "es-GT-AndresNeural",
+              "es-GT-MartaNeural",
+              "es-HN-CarlosNeural",
+              "es-HN-KarlaNeural",
+              "es-MX-DaliaNeural",
+              "es-MX-JorgeNeural",
+              "es-NI-FedericoNeural",
+              "es-NI-YolandaNeural",
+              "es-PA-MargaritaNeural",
+              "es-PA-RobertoNeural",
+              "es-PY-MarioNeural",
+              "es-PY-TaniaNeural",
+              "es-PE-AlexNeural",
+              "es-PE-CamilaNeural",
+              "es-PR-KarinaNeural",
+              "es-PR-VictorNeural",
+              "es-ES-AlvaroNeural",
+              "es-ES-ElviraNeural",
+              "es-US-AlonsoNeural",
+              "es-US-PalomaNeural",
+              "es-UY-MateoNeural",
+              "es-UY-ValentinaNeural",
+              "es-VE-PaolaNeural",
+              "es-VE-SebastianNeural"
+            ],
+            "vi": [
+              "vi-VN-HoaiMyNeural",
+              "vi-VN-NamMinhNeural"
+            ],
+            "th": [
+              "th-TH-NiwatNeural",
+              "th-TH-PremwadeeNeural"
+            ],
+            "ar": [
+              "ar-DZ-AminaNeural",
+              "ar-DZ-IsmaelNeural",
+              "ar-BH-AliNeural",
+              "ar-BH-LailaNeural",
+              "ar-EG-SalmaNeural",
+              "ar-EG-ShakirNeural",
+              "ar-IQ-BasselNeural",
+              "ar-IQ-RanaNeural",
+              "ar-JO-SanaNeural",
+              "ar-JO-TaimNeural",
+              "ar-KW-FahedNeural",
+              "ar-KW-NouraNeural",
+              "ar-LB-LaylaNeural",
+              "ar-LB-RamiNeural",
+              "ar-LY-ImanNeural",
+              "ar-LY-OmarNeural",
+              "ar-MA-JamalNeural",
+              "ar-MA-MounaNeural",
+              "ar-OM-AbdullahNeural",
+              "ar-OM-AyshaNeural",
+              "ar-QA-AmalNeural",
+              "ar-QA-MoazNeural",
+              "ar-SA-HamedNeural",
+              "ar-SA-ZariyahNeural",
+              "ar-SY-AmanyNeural",
+              "ar-SY-LaithNeural",
+              "ar-TN-HediNeural",
+              "ar-TN-ReemNeural",
+              "ar-AE-FatimaNeural",
+              "ar-AE-HamdanNeural",
+              "ar-YE-MaryamNeural",
+              "ar-YE-SalehNeural"
+            ],
+            "bn": [
+              "bn-BD-NabanitaNeural",
+              "bn-BD-PradeepNeural",
+              "bn-IN-BashkarNeural",
+              "bn-IN-TanishaaNeural"
+            ],
+            "cs": [
+              "cs-CZ-AntoninNeural",
+              "cs-CZ-VlastaNeural"
+            ],
+            "nl": [
+              "nl-BE-ArnaudNeural",
+              "nl-BE-DenaNeural",
+              "nl-NL-ColetteNeural",
+              "nl-NL-FennaNeural",
+              "nl-NL-MaartenNeural"
+            ],
+            "he": [
+              "he-IL-AvriNeural",
+              "he-IL-HilaNeural"
+            ],
+            "hi": [
+              "hi-IN-MadhurNeural",
+              "hi-IN-SwaraNeural"
+            ],
+            "hu": [
+              "hu-HU-NoemiNeural",
+              "hu-HU-TamasNeural"
+            ],
+            "id": [
+              "id-ID-ArdiNeural",
+              "id-ID-GadisNeural"
+            ],
+            "it": [
+              "it-IT-GiuseppeNeural",
+              "it-IT-DiegoNeural",
+              "it-IT-ElsaNeural",
+              "it-IT-IsabellaNeural"
+            ],
+            "kk": [
+              "kk-KZ-AigulNeural",
+              "kk-KZ-DauletNeural"
+            ],
+            "ms": [
+              "ms-MY-OsmanNeural",
+              "ms-MY-YasminNeural"
+            ],
+            "pl": [
+              "pl-PL-MarekNeural",
+              "pl-PL-ZofiaNeural"
+            ],
+            "pt": [
+              "pt-BR-ThalitaNeural",
+              "pt-BR-AntonioNeural",
+              "pt-BR-FranciscaNeural",
+              "pt-PT-DuarteNeural",
+              "pt-PT-RaquelNeural"
+            ],
+            "sv": [
+              "sv-SE-MattiasNeural",
+              "sv-SE-SofieNeural"
+            ],
+            "tr": [
+              "tr-TR-AhmetNeural",
+              "tr-TR-EmelNeural"
+            ],
+            "uk": [
+              "uk-UA-OstapNeural",
+              "uk-UA-PolinaNeural"
+            ],
+          },
           selectedLanguage: 'zh',
           selectedVoice: '',
           selectedStyle: 'friendly',
@@ -177,10 +646,8 @@
           volume: 1.0,
           pitch: 0,
           isGenerating: false,
-          apiKey: 'adgas213423235saeg',
-          showStyleTable: false,
-          progress: 0, // 合成进度
-          totalSegments: 0 // 总段数
+          apiKey: 'adgas213423235saeg', // Replace with your actual API key
+          showStyleTable: false // 默认隐藏
         };
       },
       watch: {
@@ -189,9 +656,9 @@
             if (this.voices.length > 0) {
               this.selectedVoice = this.voices[0];
             } else {
-              this.selectedVoice = null;
+              this.selectedVoice = null; 
               console.warn(`No voices available for language: ${newLanguage}`);
-            }
+            }          
           });
         }
       },
@@ -199,7 +666,7 @@
         this.$nextTick(() => {
           this.selectedVoice = this.voices[0];
         });
-      },
+      },   
       computed: {
         voices() {
           return this.language_role[this.selectedLanguage] || [];
@@ -238,92 +705,10 @@
               continue;
             }
             if (line !== '') {
-              filteredLines.push(line);
+              filteredLines.push(line);      
             }
           }
           return filteredLines.join('\n');
-        },
-        // 分段文本
-        splitText(text, maxLength = 500) {
-          const segments = [];
-          let currentSegment = '';
-          const lines = text.split('\n');
-
-          for (let line of lines) {
-            if (currentSegment.length + line.length > maxLength && currentSegment) {
-              segments.push(currentSegment.trim());
-              currentSegment = line;
-            } else {
-              currentSegment += (currentSegment ? '\n' : '') + line;
-            }
-          }
-          if (currentSegment) {
-            segments.push(currentSegment.trim());
-          }
-          return segments;
-        },
-        // 合并音频
-        async mergeAudioBlobs(blobs) {
-          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          const buffers = await Promise.all(blobs.map(blob => 
-            fetch(URL.createObjectURL(blob)).then(res => res.arrayBuffer()).then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
-          ));
-
-          const totalLength = buffers.reduce((sum, buffer) => sum + buffer.length, 0);
-          const mergedBuffer = audioContext.createBuffer(1, totalLength, buffers[0].sampleRate);
-          let offset = 0;
-
-          for (let buffer of buffers) {
-            mergedBuffer.getChannelData(0).set(buffer.getChannelData(0), offset);
-            offset += buffer.length;
-          }
-
-          const blob = await this.bufferToWave(mergedBuffer, totalLength);
-          return blob;
-        },
-        // 将AudioBuffer转换为WAV格式（简易实现）
-        bufferToWave(abuffer, len) {
-          return new Promise((resolve) => {
-            const numOfChan = abuffer.numberOfChannels;
-            const length = len * numOfChan * 2 + 44;
-            const buffer = new ArrayBuffer(length);
-            const view = new DataView(buffer);
-            const channels = [];
-            let sample, offset = 0, pos = 0;
-
-            const setUint16 = (data) => view.setUint16(pos, data, true) & (pos += 2);
-            const setUint32 = (data) => view.setUint32(pos, data, true) & (pos += 4);
-
-            setUint32(0x46464952); // "RIFF"
-            setUint32(length - 8); // file length - 8
-            setUint32(0x45564157); // "WAVE"
-            setUint32(0x20746d66); // "fmt " chunk
-            setUint32(16); // length = 16
-            setUint16(1); // PCM (uncompressed)
-            setUint16(numOfChan);
-            setUint32(abuffer.sampleRate);
-            setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
-            setUint16(numOfChan * 2); // block-align
-            setUint16(16); // 16-bit
-            setUint32(0x61746164); // "data" - chunk
-            setUint32(length - pos - 4); // chunk length
-
-            for (let i = 0; i < abuffer.numberOfChannels; i++) {
-              channels.push(abuffer.getChannelData(i));
-            }
-
-            while (offset < len) {
-              for (let i = 0; i < numOfChan; i++) {
-                sample = Math.max(-1, Math.min(1, channels[i][offset]));
-                sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
-                view.setInt16(pos, sample, true);
-                pos += 2;
-              }
-              offset++;
-            }
-
-            resolve(new Blob([buffer], { type: 'audio/wav' }));
-          });
         },
         async generateSpeech(listener_text) {
           const workerUrl = 'https://ttsapi.pyvideotrans.com/v1/audio/speech';
@@ -334,14 +719,9 @@
           if (!parsedText) {
             return alert('必须上传或输入要合成的文字');
           }
-
-          const segments = this.splitText(parsedText);
-          this.totalSegments = segments.length;
-          this.progress = 0;
-          this.isGenerating = true;
-
           const requestBody = {
             "model": "tts-1",
+            "input": parsedText,
             "voice": this.selectedVoice,
             "response_format": "mp3",
             "speed": this.speed,
@@ -349,74 +729,65 @@
             "pitch": this.pitch,
             "style": this.selectedStyle
           };
+          this.isGenerating = true;
 
-          const audioBlobs = [];
-          for (let segment of segments) {
-            requestBody.input = segment;
-            try {
-              const response = await fetch(workerUrl, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${this.apiKey}`,
-                },
-                body: JSON.stringify(requestBody),
-              });
+          try {
+            const response = await fetch(workerUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.apiKey}`,
+              },
+              body: JSON.stringify(requestBody),
+            });
 
-              if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
-              }
-
-              const audioBlob = await response.blob();
-              audioBlobs.push(audioBlob);
-              this.progress++;
-            } catch (error) {
-              console.error('Error generating segment:', error);
-              alert(`分段合成失败: ${error.message}`);
-              this.isGenerating = false;
-              return;
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
             }
+
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+
+            const existingAudio = document.getElementById('audioElement');
+            if (existingAudio) {
+              existingAudio.remove();
+            }
+            const existingDownloadButton = document.getElementById('downloadButton');
+            if (existingDownloadButton) {
+              existingDownloadButton.remove();
+            }
+
+            const audioElement = document.createElement('audio');
+            audioElement.id = 'audioElement';
+            audioElement.src = audioUrl;
+            audioElement.controls = true;
+            audioElement.autoplay = true;
+
+            const downloadButton = document.createElement('button');
+            downloadButton.id = 'downloadButton';
+            downloadButton.textContent = '下载';
+            downloadButton.className = 'ml-2 font-bold py-2 px-4 rounded';
+
+            downloadButton.addEventListener('click', () => {
+              const link = document.createElement('a');
+              link.href = audioUrl;
+              link.download = getmp3name();
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            });
+
+            if (typeof listener_text !== 'string') {    
+              const audioContainer = document.getElementById('audioContainer');
+              audioContainer.appendChild(audioElement);
+              audioContainer.appendChild(downloadButton);
+            }
+          } catch (error) {
+            console.error('Error generating speech:', error);
+            alert("Error generating speech: " + error.message);
+          } finally {
+            this.isGenerating = false;
           }
-
-          let finalAudioBlob;
-          if (audioBlobs.length > 1) {
-            finalAudioBlob = await this.mergeAudioBlobs(audioBlobs);
-          } else {
-            finalAudioBlob = audioBlobs[0];
-          }
-
-          const audioUrl = URL.createObjectURL(finalAudioBlob);
-          const existingAudio = document.getElementById('audioElement');
-          if (existingAudio) existingAudio.remove();
-          const existingDownloadButton = document.getElementById('downloadButton');
-          if (existingDownloadButton) existingDownloadButton.remove();
-
-          const audioElement = document.createElement('audio');
-          audioElement.id = 'audioElement';
-          audioElement.src = audioUrl;
-          audioElement.controls = true;
-          audioElement.autoplay = true;
-
-          const downloadButton = document.createElement('button');
-          downloadButton.id = 'downloadButton';
-          downloadButton.textContent = '下载';
-          downloadButton.className = 'ml-2 font-bold py-2 px-4 rounded';
-          downloadButton.addEventListener('click', () => {
-            const link = document.createElement('a');
-            link.href = audioUrl;
-            link.download = getmp3name();
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          });
-
-          if (typeof listener_text !== 'string') {
-            const audioContainer = document.getElementById('audioContainer');
-            audioContainer.appendChild(audioElement);
-            audioContainer.appendChild(downloadButton);
-          }
-
-          this.isGenerating = false;
         },
         toggleStyleTable() {
           this.showStyleTable = !this.showStyleTable;
