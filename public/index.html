@@ -47,7 +47,6 @@
 </head>
 <body class="bg-gray-100 font-sans">
   <div id="app">
-    <!-- 将导航栏移入 #app 容器内 -->
     <ul id="layui-nav" class="layui-nav">
       <li class="layui-nav-item"><a href="#" @click.prevent="toggleStyleTable">iuai</a></li>
     </ul>
@@ -122,7 +121,6 @@
         </button>
       </div>
 
-      <!-- 语气风格说明表格，默认隐藏 -->
       <table v-show="showStyleTable" class="min-w-full divide-y divide-gray-200 my-4">
         <thead class="bg-gray-50">
           <tr>
@@ -646,8 +644,8 @@
           volume: 1.0,
           pitch: 0,
           isGenerating: false,
-          apiKey: 'adgas213423235saeg', // Replace with your actual API key
-          showStyleTable: false // 默认隐藏
+          apiKey: 'adgas213423235saeg',
+          showStyleTable: false
         };
       },
       watch: {
@@ -719,9 +717,25 @@
           if (!parsedText) {
             return alert('必须上传或输入要合成的文字');
           }
+
+          const MAX_TEXT_LENGTH = 1000; // 每段最大字符数，可根据API限制调整
+          const textSegments = [];
+          let currentSegment = '';
+
+          // 分段逻辑：按句号或换行符分割，控制每段长度
+          const lines = parsedText.split('\n');
+          for (let line of lines) {
+            if ((currentSegment + line).length > MAX_TEXT_LENGTH) {
+              if (currentSegment) textSegments.push(currentSegment.trim());
+              currentSegment = line;
+            } else {
+              currentSegment += (currentSegment ? '\n' : '') + line;
+            }
+          }
+          if (currentSegment) textSegments.push(currentSegment.trim());
+
           const requestBody = {
             "model": "tts-1",
-            "input": parsedText,
             "voice": this.selectedVoice,
             "response_format": "mp3",
             "speed": this.speed,
@@ -729,24 +743,34 @@
             "pitch": this.pitch,
             "style": this.selectedStyle
           };
+
           this.isGenerating = true;
+          let audioBlobs = [];
 
           try {
-            const response = await fetch(workerUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${this.apiKey}`,
-              },
-              body: JSON.stringify(requestBody),
-            });
+            // 逐段合成音频
+            for (let segment of textSegments) {
+              requestBody.input = segment;
+              const response = await fetch(workerUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${this.apiKey}`,
+                },
+                body: JSON.stringify(requestBody),
+              });
 
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+              }
+
+              const audioBlob = await response.blob();
+              audioBlobs.push(audioBlob);
             }
 
-            const audioBlob = await response.blob();
-            const audioUrl = URL.createObjectURL(audioBlob);
+            // 合并音频（简单拼接）
+            const combinedBlob = new Blob(audioBlobs, { type: 'audio/mp3' });
+            const audioUrl = URL.createObjectURL(combinedBlob);
 
             const existingAudio = document.getElementById('audioElement');
             if (existingAudio) {
@@ -805,8 +829,6 @@
       const seconds = String(now.getSeconds()).padStart(2, '0');
       return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}.mp3`;
     }
-  </script><!--
-  <script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
-  <script>LA.init({id:"KO5lYldwVUTyC8eE",ck:"KO5lYldwVUTyC8eE"})</script>-->
+  </script>
 </body>
 </html>
