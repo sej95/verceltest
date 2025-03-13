@@ -59,7 +59,7 @@
         <!-- 文本输入区域占据左侧3列 - 添加明确的宽度样式 -->
         <div class="md:col-span-3 w-full" style="grid-column: span 3 / span 3;">
           <div class="bg-white rounded-lg shadow-md p-4">
-            <label for="textInput" class="block font-medium mb-2">输入文本<span class="ms-2 text-xs text-gray-700">（最多10240字符）行尾加<code>[50]</code>代表添加50毫秒静音，<code>[500]</code>代表加500毫秒静音，中括号内数字代表静音毫秒数</span></label>
+            <label for="textInput" class="block font-medium mb-2">输入文本<span class="ms-2 text-xs text-gray-700">行尾加<code>[50]</code>代表添加50毫秒静音，<code>[500]</code>代表加500毫秒静音，中括号内数字代表静音毫秒数[最多10240字符]</span></label>
             <!-- 增加输入框的高度，从rows="15"改为rows="22"，并添加min-height确保高度一致 -->
             <textarea placeholder="选择txt文本或srt字幕上传，或直接在此输入要配音的文字" id="textInput" v-model="text" rows="18" maxlength="10240" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" style="min-height: 500px;"></textarea>
           </div>
