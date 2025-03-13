@@ -1,0 +1,12 @@
+/* 使用更具体的选择器，避免全局样式冲突 */
+body.style-page {
+    font-family: system-ui;
+    text-align: center;
+    padding: 5rem;
+    background: #f0f0f0;
+}
+
+/* 使用更具体的选择器，避免覆盖其他h1样式 */
+.style-page h1 {
+    color: #0070f3;
+}
