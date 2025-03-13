@@ -1119,8 +1119,8 @@ video {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
     }
-    textInput {
-      min-height: 300px !important;
-      rows: 12 !important;
-    }
+  #textInput {
+    min-height: 300px !important;
+    height: 300px !important;
+  }
 }
