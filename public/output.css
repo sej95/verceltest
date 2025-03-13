@@ -1007,22 +1007,116 @@ video {
 @media (max-width: 768px) {
   table.min-w-full {
     table-layout: fixed !important;
-    width: 100vw !important;
-    margin-left: -1rem;
-    margin-right: -1rem;
+    width: 100% !important; /* 修改为100%而不是100vw，避免横向溢出 */
+    margin-left: 0; /* 移除负边距，防止越界 */
+    margin-right: 0;
+    font-size: 0.875rem; /* 统一字体大小 */
   }
+  
+  table.min-w-full th,
   table.min-w-full td { 
     white-space: normal;
     padding: 0.5rem 0.75rem !important;
     word-break: break-word; /* 强制换行 */
-  }
-  td:nth-child(1) { 
-    width: 40% !important;
-    padding-right: 1rem !important;
-  }
-  td:nth-child(2) { 
-    width: 60% !important;
-    font-size: calc(0.875rem + 0.5vw);
+    font-size: inherit; /* 继承表格的字体大小设置 */
     line-height: 1.4;
   }
+  
+  /* 调整列宽比例 */
+  table.min-w-full td:nth-child(1) { 
+    width: 30% !important; /* 减小第一列宽度 */
+    padding-right: 0.5rem !important;
+  }
+  
+  table.min-w-full td:nth-child(2) { 
+    width: 70% !important; /* 增加第二列宽度 */
+    font-size: 0.875rem; /* 固定字体大小，确保一致性 */
+  }
+  
+  /* 确保容器内所有元素不会溢出 */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    overflow-x: hidden;
+  }
+  
+  /* 调整移动端下的网格布局 */
+  .grid-cols-1 > * {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  
+  /* 统一所有控制面板元素的样式 */
+  .bg-white.rounded-lg.shadow-md.p-4 {
+    width: 100% !important;
+    margin-bottom: 1rem !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* 确保所有输入控件宽度一致 */
+  input[type="file"],
+  input[type="range"],
+  select,
+  textarea {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* 确保按钮样式一致 */
+  button {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  
+  /* 调整标题和标签的字体大小，确保一致性 */
+  h1 {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  label {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+  }
+    /* 调整语气风格表格的列宽比例 */
+    table.min-w-full {
+      table-layout: fixed !important;
+      width: 100% !important;
+      margin-left: 0;
+      margin-right: 0;
+      font-size: 0.875rem;
+    }
+    
+    /* 设置表头和单元格的基本样式 */
+    table.min-w-full th,
+    table.min-w-full td { 
+      white-space: normal;
+      padding: 0.5rem 0.75rem !important;
+      word-break: break-word;
+      font-size: inherit;
+      line-height: 1.4;
+    }
+    
+    /* 第一列(语气风格)宽度设置为30% */
+    table.min-w-full th:first-child,
+    table.min-w-full td:first-child { 
+      width: 30% !important;
+      padding-right: 0.5rem !important;
+    }
+    
+    /* 第二列(风格说明)宽度设置为70% */
+    table.min-w-full th:last-child,
+    table.min-w-full td:last-child { 
+      width: 70% !important;
+      font-size: 0.875rem;
+    }
+    
+    /* 添加表格容器的样式，防止溢出 */
+    .overflow-x-auto {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
 }

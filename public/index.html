@@ -6,8 +6,8 @@
   <meta name="description" content="在线免费的语音合成、文字转语音、文字合成配音服务，基于edge-tts语音合成服务提供，无需登录无需注册，在线免费合成语音"/>
   <meta name="keyword" content="语音合成,文字合成,文字配音,合成语音,edge-tts"/>
   <title>语音合成-文字转语音-srt字幕转语音-tts</title>
-  <link href="/output.css" rel="stylesheet">
-  <script src="/vue.js"></script>
+  <link href="./output.css" rel="stylesheet">
+  <script src="./vue.js"></script>
   
   <style>
   #layui-nav {
@@ -51,79 +51,110 @@
       <li class="layui-nav-item"><a href="#" @click.prevent="toggleStyleTable">iuai</a></li>
     </ul>
     <div class="container mx-auto p-4 md:p-8">
-      <h1 class="text-3xl font-bold mb-2 text-center text-gray-800">文字合成语音/SRT字幕转语音</h1>
+      <h1 class="text-3xl font-bold mb-2 text-center text-gray-800">TXT/SRT字幕转语音</h1>
       
-
+      <!-- 修改这部分布局，使文本区域占据左侧3列，高度与右侧保持一致 -->
+      <!-- 修改网格布局，确保左侧区域正确占据3列 -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-         <div class="grid grid-cols-subgrid md:col-span-3 gap-4 mb-4">
-          <label for="textInput" class="block font-medium mb-2 ">输入文本<span class="ms-2 text-xs text-gray-700">行尾加<code>[50]</code>代表添加50毫秒静音，<code>[500]</code>代表加500毫秒静音，中括号内数字代表静音毫秒数</span></label>
-          <textarea placeholder="选择txt文本或srt字幕上传，或直接在此输入要配音的文字" id="textInput" v-model="text" rows="5" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
-        </div>
-
-        <div class="mb-4 md:col-start-4 md:col-span-1">
-          <label for="fileInput" class="block text-gray-700 font-medium mb-2">选择想合成语音的文件 (srt/txt):</label>
-          <input type="file" id="fileInput" @change="handleFileSelect" accept=".srt,.txt" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <!-- 文本输入区域占据左侧3列 - 添加明确的宽度样式 -->
+        <div class="md:col-span-3 w-full" style="grid-column: span 3 / span 3;">
+          <div class="bg-white rounded-lg shadow-md p-4">
+            <label for="textInput" class="block font-medium mb-2">输入文本<span class="ms-2 text-xs text-gray-700">行尾加<code>[50]</code>代表添加50毫秒静音，<code>[500]</code>代表加500毫秒静音，中括号内数字代表静音毫秒数</span></label>
+            <!-- 增加输入框的高度，从rows="15"改为rows="22"，并添加min-height确保高度一致 -->
+            <textarea placeholder="选择txt文本或srt字幕上传，或直接在此输入要配音的文字" id="textInput" v-model="text" rows="18" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" style="min-height: 500px;"></textarea>
+          </div>
+          
+          <!-- 音频播放区域也放在左侧 -->
+          <div id="audioContainer" class="my-3 text-center bg-white flex justify-center py-3 rounded-lg shadow-md"></div>
+          
+          <!-- 合成按钮放在左侧底部 -->
+          <div class="mt-4 text-center bg-white rounded-lg shadow-md p-4">
+            <button @click="generateSpeech" :disabled="isGenerating" class="bg-red-500 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+              {{ isGenerating ? '语音合成中...' : '执行合成语音' }}
+            </button>
+          </div>
         </div>
         
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <label for="language" class="block text-gray-700 font-medium mb-2">文本语言:</label>
-          <select id="language" v-model="selectedLanguage" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option v-for="(roles, language) in language_role" :value="language" :key="language">{{ names[language] }}</option>
-          </select>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-md p-6" v-if="selectedLanguage">
-          <div class="flex">
-            <label for="voice" class="block text-gray-700 font-medium mb-2">配音角色</label>
-            (<span id="shiting" class="cursor-pointer" @click="shiting">试听</span>)
+        <!-- 控制面板竖向排列在右侧第4列 - 添加明确的宽度样式 -->
+        <div class="md:col-span-1 w-full" style="grid-column: span 1 / span 1;">
+          <!-- 文件上传 -->
+          <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+            <label for="fileInput" class="block text-gray-700 font-medium mb-2">选择想合成语音的文件 (srt/txt):</label>
+            <input type="file" id="fileInput" @change="handleFileSelect" accept=".srt,.txt" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
           </div>
-          <select id="voice" v-model="selectedVoice" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option v-for="voice in voices" :value="voice" :key="voice">{{ voice.split('-').slice(-1)[0] }}</option>
-          </select>
-        </div>  
+          
+          <!-- 其余控制面板元素保持不变 -->
+          <div class="bg-white rounded-lg shadow-md p-4">
+            <label for="language" class="block text-gray-700 font-medium mb-2">文本语言:</label>
+            <select id="language" v-model="selectedLanguage" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option v-for="(roles, language) in language_role" :value="language" :key="language">{{ names[language] }}</option>
+            </select>
+          </div>
+          
+          <!-- 配音角色 -->
+          <div class="bg-white rounded-lg shadow-md p-4" v-if="selectedLanguage">
+            <div class="flex">
+              <label for="voice" class="block text-gray-700 font-medium mb-2">配音角色</label>
+              (<span id="shiting" class="cursor-pointer" @click="shiting">试听</span>)
+            </div>
+            <select id="voice" v-model="selectedVoice" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option v-for="voice in voices" :value="voice" :key="voice">{{ voice.split('-').slice(-1)[0] }}</option>
+            </select>
+          </div>
+          
+          <!-- 语速控制 -->
+          <div class="bg-white rounded-lg shadow-md p-4">
+            <label for="speed" class="block text-gray-700 font-medium mb-2">语速 (0.1 -> 5.0):</label>
+            <div class="flex items-center">    
+              <input type="range" id="speed" v-model.number="speed" min="0.1" max="5.0" step="0.1" class="w-full mr-2">
+              <span class="text-gray-600">{{ speed }}</span>
+            </div>
+          </div>
+          
+          <!-- 音调控制 -->
+          <div class="bg-white rounded-lg shadow-md p-4">
+            <label for="pitch" class="block text-gray-700 font-medium mb-2">音调 (-100 -> +100):</label>
+            <div class="flex items-center">
+              <input type="range" id="pitch" v-model.number="pitch" min="-100" max="100" class="w-full mr-2">
+              <span class="text-gray-600">{{ pitch }}</span>
+            </div>
+          </div>
+          
+          <!-- 音量控制 -->
+          <div class="bg-white rounded-lg shadow-md p-4">
+            <label for="volume" class="block text-gray-700 font-medium mb-2">音量 (0.1 -> 5):</label>
+            <div class="flex items-center">
+              <input type="range" id="volume" v-model.volume="volume" min="0.1" step="0.1" max="5" class="w-full mr-2">
+              <span class="text-gray-600">{{ volume }}</span>
+            </div>
+          </div>
+          
+          <!-- 语气选择 -->
+          <div class="bg-white rounded-lg shadow-md p-4">
+            <label for="style" class="block text-gray-700 font-medium mb-2">语气(部分不起作用):</label>
+            <select id="style" v-model="selectedStyle" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option v-for="st in styles" :value="st" :key="st">{{ st }}</option>
+            </select>
+          </div>
+        </div>
       </div>
-
+      
+      <!-- 移除这些不再需要的网格布局 -->
+      <!-- <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        ...
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mt-4">
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <label for="speed" class="block text-gray-700 font-medium mb-2">语速 (0.1 -> 5.0):</label>
-          <div class="flex items-center">    
-            <input type="range" id="speed" v-model.number="speed" min="0.1" max="5.0" step="0.1" class="w-full mr-2">
-            <span class="text-gray-600">{{ speed }}</span>
-          </div>
-        </div>    
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <label for="pitch" class="block text-gray-700 font-medium mb-2">音调 (-100 -> +100):</label>
-          <div class="flex items-center">
-            <input type="range" id="pitch" v-model.number="pitch" min="-100" max="100" class="w-full mr-2">
-            <span class="text-gray-600">{{ pitch }}</span>
-          </div>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <label for="volume" class="block text-gray-700 font-medium mb-2">音量 (0.1 -> 5):</label>
-          <div class="flex items-center">
-            <input type="range" id="volume" v-model.volume="volume" min="0.1" step="0.1" max="5" class="w-full mr-2">
-            <span class="text-gray-600">{{ volume }}</span>
-          </div>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <label for="style" class="block text-gray-700 font-medium mb-2">语气(部分不起作用):</label>
-          <select id="style" v-model="selectedStyle" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option v-for="st in styles" :value="st" :key="st">{{ st }}</option>
-          </select>
-        </div>
-      </div>
+        ...
+      </div> -->
       
-      <div id="audioContainer" class="my-3 text-center bg-white flex justify-center py-3 "></div>
-      
+      <!-- 移除这些不再需要的元素，因为已经移到左侧布局中 -->
+      <!-- <div id="audioContainer" class="my-3 text-center bg-white flex justify-center py-3"></div>
       <div class="mt-8 text-center">
         <button @click="generateSpeech" :disabled="isGenerating" class="bg-red-500 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
           {{ isGenerating ? '语音合成中...' : '执行合成语音' }}
         </button>
-      </div>
-
+      </div> -->
+      <div class="overflow-x-auto">
       <table v-show="showStyleTable" class="min-w-full divide-y divide-gray-200 my-4">
         <thead class="bg-gray-50">
           <tr>
@@ -270,7 +301,7 @@
           </tr>
         </tbody>
       </table>
-
+      </div>
       <footer class="bg-gray-100 mt-6 mb-2 py-4 mt-8">
         <div class="container mx-auto text-center text-gray-500 text-sm">
           版权所有 © 2025 iuaihub.com 
